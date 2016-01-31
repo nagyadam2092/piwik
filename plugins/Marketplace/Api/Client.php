@@ -6,26 +6,30 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
  */
-namespace Piwik\Plugins\CorePluginsAdmin;
+namespace Piwik\Plugins\Marketplace\Api;
 
 use Piwik\Cache;
 use Piwik\Http;
+use Piwik\Plugins\Marketplace\Api\Service;
+use Piwik\SettingsServer;
 use Piwik\Version;
 
 /**
  *
  */
-class MarketplaceApiClient
+class Client
 {
     const CACHE_TIMEOUT_IN_SECONDS = 1200;
     const HTTP_REQUEST_TIMEOUT = 60;
 
-    private $domain = 'http://plugins.piwik.org';
+    /**
+     * @var Service
+     */
+    private $service;
 
-    public static function clearAllCacheEntries()
+    public function __construct(Service $service)
     {
-        $cache = Cache::getLazyCache();
-        $cache->flushAll();
+        $this->service = $service;
     }
 
     public function getPluginInfo($name)
@@ -35,15 +39,29 @@ class MarketplaceApiClient
         return $this->fetch($action, array());
     }
 
+    public function getConsumer()
+    {
+        try {
+            $consumer = $this->fetch('consumer', array());
+        } catch (Exception $e) {
+            $consumer = null;
+        }
+
+        return $consumer;
+    }
+
     public function download($pluginOrThemeName, $target)
     {
+        @ignore_user_abort(true);
+        SettingsServer::setMaxExecutionTime(0);
+
         $downloadUrl = $this->getDownloadUrl($pluginOrThemeName);
 
         if (empty($downloadUrl)) {
             return false;
         }
 
-        $success = Http::fetchRemoteFile($downloadUrl, $target, 0, static::HTTP_REQUEST_TIMEOUT);
+        $success = $this->service->download($downloadUrl, $target, static::HTTP_REQUEST_TIMEOUT);
 
         return $success;
     }
@@ -101,9 +119,9 @@ class MarketplaceApiClient
         return $pluginDetails;
     }
 
-    public function searchForPlugins($keywords, $query, $sort)
+    public function searchForPlugins($keywords, $query, $sort, $purchaseType)
     {
-        $response = $this->fetch('plugins', array('keywords' => $keywords, 'query' => $query, 'sort' => $sort));
+        $response = $this->fetch('plugins', array('keywords' => $keywords, 'query' => $query, 'sort' => $sort, 'purchase_type' => $purchaseType));
 
         if (!empty($response['plugins'])) {
             return $response['plugins'];
@@ -112,9 +130,9 @@ class MarketplaceApiClient
         return array();
     }
 
-    public function searchForThemes($keywords, $query, $sort)
+    public function searchForThemes($keywords, $query, $sort, $purchaseType)
     {
-        $response = $this->fetch('themes', array('keywords' => $keywords, 'query' => $query, 'sort' => $sort));
+        $response = $this->fetch('themes', array('keywords' => $keywords, 'query' => $query, 'sort' => $sort, 'purchase_type' => $purchaseType));
 
         if (!empty($response['plugins'])) {
             return $response['plugins'];
@@ -125,33 +143,31 @@ class MarketplaceApiClient
 
     private function fetch($action, $params)
     {
-        ksort($params);
+        ksort($params); // sort params so cache is reused more often even if param order is different
         $query = http_build_query($params);
-
         $cacheId = $this->getCacheKey($action, $query);
+
         $cache  = $this->buildCache();
         $result = $cache->fetch($cacheId);
 
-        if (false === $result) {
-            $endpoint = $this->domain . '/api/1.0/';
-            $url = sprintf('%s%s?%s', $endpoint, $action, $query);
-            $response = Http::sendHttpRequest($url, static::HTTP_REQUEST_TIMEOUT);
-            $result = json_decode($response, true);
-
-            if (is_null($result)) {
-                $message = sprintf('There was an error reading the response from the Marketplace: %s. Please try again later.',
-                    substr($response, 0, 50));
-                throw new MarketplaceApiException($message);
-            }
-
-            if (!empty($result['error'])) {
-                throw new MarketplaceApiException($result['error']);
-            }
-
-            $cache->save($cacheId, $result, self::CACHE_TIMEOUT_IN_SECONDS);
+        if ($result !== false) {
+            return $result;
         }
 
+        try {
+            $result = $this->service->fetch($action, $params);
+        } catch (Service\Exception $e) {
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
+
+        $cache->save($cacheId, $result, self::CACHE_TIMEOUT_IN_SECONDS);
+
         return $result;
+    }
+
+    public function clearAllCacheEntries()
+    {
+        $this->buildCache()->flushAll();
     }
 
     private function buildCache()
@@ -161,12 +177,14 @@ class MarketplaceApiClient
 
     private function getCacheKey($action, $query)
     {
-        return sprintf('marketplace.api.1.0.%s.%s', str_replace('/', '.', $action), md5($query));
+        $version = $this->service->getVersion();
+
+        return sprintf('marketplace.api.%s.%s.%s', $version, str_replace('/', '.', $action), md5($query));
     }
 
     /**
      * @param  $pluginOrThemeName
-     * @throws MarketplaceApiException
+     * @throws Exception
      * @return string
      */
     public function getDownloadUrl($pluginOrThemeName)
@@ -174,13 +192,13 @@ class MarketplaceApiClient
         $plugin = $this->getPluginInfo($pluginOrThemeName);
 
         if (empty($plugin['versions'])) {
-            throw new MarketplaceApiException('Plugin has no versions.');
+            throw new Exception('Plugin has no versions.');
         }
 
         $latestVersion = array_pop($plugin['versions']);
         $downloadUrl = $latestVersion['download'];
 
-        return $this->domain . $downloadUrl . '?coreVersion=' . Version::VERSION;
+        return $this->service->getDomain() . $downloadUrl . '?coreVersion=' . Version::VERSION;
     }
 
 }

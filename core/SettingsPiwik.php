@@ -233,6 +233,19 @@ class SettingsPiwik
     }
 
     /**
+     * Returns `true` if Piwik is running on more than one server. For example in a load balanced environment. In this
+     * case we should not make changes to the config and not install a plugin via the UI as it would be only executed
+     * on one server.
+     * @return bool
+     */
+    public static function isMultiServerEnvironment()
+    {
+        $is = Config::getInstance()->General['multi_server_environment'];
+
+        return !empty($is);
+    }
+
+    /**
      * Returns `true` if segmentation is allowed for this user, `false` if otherwise.
      *
      * @return bool

@@ -12,7 +12,7 @@
 
         <p>{{ 'CorePluginsAdmin_InfoPluginUpdateIsRecommended'|translate }}</p>
 
-        {{ plugins.tablePluginUpdates(pluginsHavingUpdate, updateNonce, activateNonce, 0) }}
+        {{ plugins.tablePluginUpdates(pluginsHavingUpdate, updateNonce, installNonce, isMultiServerEnvironment) }}
     {% endif %}
 
     <h2 piwik-enriched-headline>{{ title }}</h2>
@@ -23,7 +23,6 @@
     {% if not isPluginsAdminEnabled %}
         <br/>{{ 'CorePluginsAdmin_DoMoreContactPiwikAdmins'|translate }}
     {% endif %}
-
 
     {% if isMarketplaceEnabled %}
         <br />

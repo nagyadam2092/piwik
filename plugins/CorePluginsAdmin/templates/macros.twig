@@ -1,10 +1,12 @@
-{% macro tablePluginUpdates(pluginsHavingUpdate, nonce, isTheme) %}
+
+{% macro tablePluginUpdates(pluginsHavingUpdate, updateNonce, installNonce, isMultiServerEnvironment) %}
+    {% import '@Marketplace/macros.twig' as marketplaceMacro %}
 
     <div class='entityContainer'>
         <table class="dataTable entityTable">
             <thead>
             <tr>
-                <th>{% if isTheme %}{{ 'CorePluginsAdmin_Theme'|translate }}{% else %}{{ 'General_Plugin'|translate }}{% endif %}</th>
+                <th>{{ 'General_Plugin'|translate }}</th>
                 <th class="num">{{ 'CorePluginsAdmin_Version'|translate }}</th>
                 <th>{{ 'General_Description'|translate }}</th>
                 <th class="status">{{ 'CorePluginsAdmin_Status'|translate }}</th>
@@ -28,7 +30,7 @@
                     </td>
                     <td class="desc">
                         {{ plugin.description }}
-                        {{ _self.missingRequirementsPleaseUpdateNotice(plugin) }}
+                        {{ marketplaceMacro.missingRequirementsPleaseUpdateNotice(plugin) }}
                     </td>
                     <td class="status">
                         {% if plugin.isActivated %}
@@ -38,8 +40,10 @@
                         {% endif %}
                     </td>
                     <td class="togl action-links">
-                        {% if 0 == plugin.missingRequirements|length %}
-                            <a href="{{ linkTo({'action':'updatePlugin', 'pluginName': plugin.name, 'nonce': nonce}) }}">Update</a>
+                        {% if isMultiServerEnvironment %}
+                            <a onclick="$(this).css('display', 'none')" href="{{ linkTo({'action':'download', 'module': 'Marketplace', 'pluginName': plugin.name, 'nonce': installNonce}) }}">{{ 'General_Download'|translate }}</a>
+                        {% elseif 0 == plugin.missingRequirements|length %}
+                            <a href="{{ linkTo({'action':'updatePlugin', 'pluginName': plugin.name, 'nonce': updateNonce}) }}">Update</a>
                         {% else %}
                             -
                         {% endif %}
@@ -50,17 +54,6 @@
         </table>
     </div>
 
-{% endmacro %}
-
-{% macro pluginDeveloper(owner) %}
-    {% if 'piwik' == owner %}<img title="Piwik" alt="Piwik" style="padding-bottom:2px;height:11px;" src="plugins/Morpheus/images/logo-marketplace.png"/>{% else %}{{ owner }}{% endif %}
-{% endmacro %}
-
-{% macro featuredIcon(align='') %}
-    <img class="featuredIcon"
-         title="{{ 'CorePluginsAdmin_FeaturedPlugin'|translate }}"
-         src="plugins/CorePluginsAdmin/images/rating_important.png"
-         align="{{ align }}" />
 {% endmacro %}
 
 {% macro pluginsFilter(isTheme, isMarketplaceEnabled) %}
@@ -91,20 +84,6 @@
         {% endif %}
     </p>
 
-{% endmacro %}
-
-{% macro missingRequirementsPleaseUpdateNotice(plugin) %}
-    {% if plugin.missingRequirements and 0 < plugin.missingRequirements|length %}
-        {% for req in plugin.missingRequirements -%}
-            <div class="alert alert-danger">
-                {% set requirement = req.requirement|capitalize %}
-                {% if 'Php' == requirement %}
-                    {% set requirement = 'PHP' %}
-                {% endif %}
-                {{ 'CorePluginsAdmin_MissingRequirementsNotice'|translate(requirement, req.actualVersion, req.requiredVersion) }}
-            </div>
-        {%- endfor %}
-    {% endif %}
 {% endmacro %}
 
 {% macro missingRequirementsInfo(pluginName, metadata, missingRequirements, marketplacePluginNames) %}

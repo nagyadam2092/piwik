@@ -891,7 +891,7 @@ class Manager
 
     public function isValidPluginName($pluginName)
     {
-        return (bool) preg_match('/^[a-zA-Z]([a-zA-Z0-9]*)$/D', $pluginName);
+        return (bool) preg_match('/^[a-zA-Z]([a-zA-Z0-9_]*)$/D', $pluginName);
     }
 
     /**

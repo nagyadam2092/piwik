@@ -6,11 +6,11 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 
-namespace Piwik\Plugins\CorePluginsAdmin\tests\Integration;
+namespace Piwik\Plugins\Marketplace\tests\Integration;
 
 use Piwik\Config;
 use Piwik\Option;
-use Piwik\Plugins\CorePluginsAdmin\UpdateCommunication;
+use Piwik\Plugins\Marketplace\UpdateCommunication;
 use Piwik\Tests\Framework\Fixture;
 use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
 

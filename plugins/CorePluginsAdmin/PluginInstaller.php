@@ -8,12 +8,14 @@
  */
 namespace Piwik\Plugins\CorePluginsAdmin;
 
+use Piwik\Common;
 use Piwik\Container\StaticContainer;
 use Piwik\Filechecks;
 use Piwik\Filesystem;
 use Piwik\Piwik;
 use Piwik\Plugin\Dependency as PluginDependency;
 use Piwik\Unzip;
+use Piwik\Plugins\Marketplace\Api\Client;
 
 /**
  *
@@ -25,17 +27,26 @@ class PluginInstaller
 
     private $pluginName;
 
-    public function __construct($pluginName)
+    /**
+     * @var Client
+     */
+    private $marketplaceClient;
+
+    public function __construct(Client $client)
     {
-        $this->pluginName = $pluginName;
+        $this->marketplaceClient = $client;
     }
 
-    public function installOrUpdatePluginFromMarketplace()
+    public function installOrUpdatePluginFromMarketplace($pluginName)
     {
+        $this->pluginName = $pluginName;
+
         $tmpPluginPath = StaticContainer::get('path.tmp') . '/latest/plugins/';
 
-        $tmpPluginZip = $tmpPluginPath . $this->pluginName . '.zip';
-        $tmpPluginFolder = $tmpPluginPath . $this->pluginName;
+        $tmpPluginFolder = Common::generateUniqId();
+
+        $tmpPluginZip = $tmpPluginPath . $tmpPluginFolder . '.zip';
+        $tmpPluginFolder = $tmpPluginPath . $tmpPluginFolder;
 
         try {
             $this->makeSureFoldersAreWritable();
@@ -63,7 +74,8 @@ class PluginInstaller
 
     public function installOrUpdatePluginFromFile($pathToZip)
     {
-        $tmpPluginFolder = StaticContainer::get('path.tmp') . self::PATH_TO_DOWNLOAD . $this->pluginName;
+        $tmpPluginName = 'uploaded' . Common::generateUniqId();
+        $tmpPluginFolder = StaticContainer::get('path.tmp') . self::PATH_TO_DOWNLOAD . $tmpPluginName;
 
         try {
             $this->makeSureFoldersAreWritable();
@@ -106,14 +118,12 @@ class PluginInstaller
     {
         $this->removeFileIfExists($pluginZipTargetFile);
 
-        $marketplace = new MarketplaceApiClient();
-
         try {
-            $marketplace->download($this->pluginName, $pluginZipTargetFile);
+            $this->marketplaceClient->download($this->pluginName, $pluginZipTargetFile);
         } catch (\Exception $e) {
 
             try {
-                $downloadUrl = $marketplace->getDownloadUrl($this->pluginName);
+                $downloadUrl = $this->marketplaceClient->getDownloadUrl($this->pluginName);
                 $errorMessage = sprintf('Failed to download plugin from %s: %s', $downloadUrl, $e->getMessage());
 
             } catch (\Exception $ex) {
@@ -291,8 +301,7 @@ class PluginInstaller
     private function makeSurePluginNameIsValid()
     {
         try {
-            $marketplace = new MarketplaceApiClient();
-            $pluginDetails = $marketplace->getPluginInfo($this->pluginName);
+            $pluginDetails = $this->marketplaceClient->getPluginInfo($this->pluginName);
         } catch (\Exception $e) {
             throw new PluginInstallerException($e->getMessage());
         }

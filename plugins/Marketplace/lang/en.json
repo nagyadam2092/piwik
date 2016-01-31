@@ -1,0 +1,12 @@
+{
+  "Marketplace": {
+    "Marketplace": "Marketplace",
+    "PaidPlugins": "Paid Plugins",
+    "FreePlugins": "Free Plugins",
+    "FreeThemes": "Free Themes",
+    "LicenseKeyUpdatedSuccess": "License key successfuly updated.",
+    "LicenseKeyDeletedSuccess": "License key successfully deleted.",
+    "PaidPluginsNoLicenseKeyIntro": "Premium features are available for free to all %1$sPiwik PRO%2$s customers. Please insert a licence key below, or get %3$smore details%4$s."
+
+  }
+}

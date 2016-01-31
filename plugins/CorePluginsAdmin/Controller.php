@@ -11,6 +11,7 @@ namespace Piwik\Plugins\CorePluginsAdmin;
 use Exception;
 use Piwik\API\Request;
 use Piwik\Common;
+use Piwik\Container\StaticContainer;
 use Piwik\Exception\MissingFilePermissionException;
 use Piwik\Filechecks;
 use Piwik\Filesystem;
@@ -18,7 +19,9 @@ use Piwik\Nonce;
 use Piwik\Notification;
 use Piwik\Piwik;
 use Piwik\Plugin;
+use Piwik\Plugins\Marketplace\Marketplace;
 use Piwik\Settings\Manager as SettingsManager;
+use Piwik\SettingsPiwik;
 use Piwik\Translation\Translator;
 use Piwik\Url;
 use Piwik\Version;
@@ -32,57 +35,26 @@ class Controller extends Plugin\ControllerAdmin
     const DEACTIVATE_NONCE = 'CorePluginsAdmin.deactivatePlugin';
     const UNINSTALL_NONCE = 'CorePluginsAdmin.uninstallPlugin';
 
-    private $validSortMethods = array('popular', 'newest', 'alpha');
-    private $defaultSortMethod = 'popular';
-
     /**
      * @var Translator
      */
     private $translator;
 
-    public function __construct(Translator $translator)
+    /**
+     * @var PluginInstaller
+     */
+    private $pluginInstaller;
+
+    public function __construct(Translator $translator, PluginInstaller $pluginInstaller)
     {
         $this->translator = $translator;
+        $this->pluginInstaller = $pluginInstaller;
 
         parent::__construct();
     }
 
-    public function marketplace()
-    {
-        self::dieIfMarketplaceIsDisabled();
-
-        $show = Common::getRequestVar('show', 'plugins', 'string');
-        $query = Common::getRequestVar('query', '', 'string', $_POST);
-        $sort = Common::getRequestVar('sort', $this->defaultSortMethod, 'string');
-        if (!in_array($sort, $this->validSortMethods)) {
-            $sort = $this->defaultSortMethod;
-        }
-        $mode = Common::getRequestVar('mode', 'admin', 'string');
-        if (!in_array($mode, array('user', 'admin'))) {
-            $mode = 'admin';
-        }
-
-        $view = $this->configureView('@CorePluginsAdmin/marketplace');
-
-        $marketplace = new Marketplace();
-
-        $showThemes = ($show === 'themes');
-        $view->plugins = $marketplace->searchPlugins($query, $sort, $showThemes);
-        $view->showThemes = $showThemes;
-        $view->mode = $mode;
-        $view->query = $query;
-        $view->sort = $sort;
-        $view->installNonce = Nonce::getNonce(static::INSTALL_NONCE);
-        $view->updateNonce = Nonce::getNonce(static::UPDATE_NONCE);
-        $view->isSuperUser = Piwik::hasUserSuperUserAccess();
-
-        return $view->render();
-    }
-
     private function createUpdateOrInstallView($template, $nonceName)
     {
-        static::dieIfMarketplaceIsDisabled();
-
         $pluginName = $this->initPluginModification($nonceName);
         $this->dieIfPluginsAdminIsDisabled();
 
@@ -91,8 +63,7 @@ class Controller extends Plugin\ControllerAdmin
         $view->plugin = array('name' => $pluginName);
 
         try {
-            $pluginInstaller = new PluginInstaller($pluginName);
-            $pluginInstaller->installOrUpdatePluginFromMarketplace();
+            $this->pluginInstaller->installOrUpdatePluginFromMarketplace($pluginName);
 
         } catch (\Exception $e) {
 
@@ -104,7 +75,7 @@ class Controller extends Plugin\ControllerAdmin
             return;
         }
 
-        $marketplace = new Marketplace();
+        $marketplace = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
         $view->plugin = $marketplace->getPluginInfo($pluginName);
 
         return $view;
@@ -152,8 +123,7 @@ class Controller extends Plugin\ControllerAdmin
 
         $view = $this->configureView('@CorePluginsAdmin/uploadPlugin');
 
-        $pluginInstaller = new PluginInstaller('uploaded');
-        $pluginMetadata  = $pluginInstaller->installOrUpdatePluginFromFile($file);
+        $pluginMetadata  = $this->pluginInstaller->installOrUpdatePluginFromFile($file);
 
         $view->nonce = Nonce::getNonce(static::ACTIVATE_NONCE);
         $view->plugin = array(
@@ -166,38 +136,12 @@ class Controller extends Plugin\ControllerAdmin
         return $view->render();
     }
 
-    public function pluginDetails()
-    {
-        static::dieIfMarketplaceIsDisabled();
-
-        $pluginName = Common::getRequestVar('pluginName', null, 'string');
-        $activeTab  = Common::getRequestVar('activeTab', '', 'string');
-        if ('changelog' !== $activeTab) {
-            $activeTab = '';
-        }
-
-        $view = $this->configureView('@CorePluginsAdmin/pluginDetails');
-
-        try {
-            $marketplace  = new Marketplace();
-            $view->plugin = $marketplace->getPluginInfo($pluginName);
-            $view->isSuperUser  = Piwik::hasUserSuperUserAccess();
-            $view->installNonce = Nonce::getNonce(static::INSTALL_NONCE);
-            $view->updateNonce  = Nonce::getNonce(static::UPDATE_NONCE);
-            $view->activeTab    = $activeTab;
-        } catch (\Exception $e) {
-            $view->errorMessage = $e->getMessage();
-        }
-
-        return $view->render();
-    }
-
     /**
      * @deprecated
      */
     public function browsePlugins()
     {
-        $this->redirectToIndex('CorePluginsAdmin', 'marketplace');
+        $this->redirectToIndex('Marketplace', 'overview');
     }
 
     /**
@@ -205,7 +149,7 @@ class Controller extends Plugin\ControllerAdmin
      */
     public function browseThemes()
     {
-        $this->redirectToIndex('CorePluginsAdmin', 'marketplace', null, null, null, array('show' => 'themes'));
+        $this->redirectToIndex('Marketplace', 'overview', null, null, null, array('show' => 'themes'));
     }
 
     /**
@@ -213,18 +157,7 @@ class Controller extends Plugin\ControllerAdmin
      */
     public function userBrowsePlugins()
     {
-        $this->redirectToIndex('CorePluginsAdmin', 'marketplace', null, null, null, array('mode' => 'user'));
-    }
-
-    private function dieIfMarketplaceIsDisabled()
-    {
-        if (!CorePluginsAdmin::isMarketplaceEnabled()) {
-            throw new \Exception('The Marketplace feature has been disabled.
-            You may enable the Marketplace by changing the config entry "enable_marketplace" to 1.
-            Please contact your Piwik admins with your request so they can assist.');
-        }
-
-        $this->dieIfPluginsAdminIsDisabled();
+        $this->redirectToIndex('Marketplace', 'overview', null, null, null, array('mode' => 'user'));
     }
 
     private function dieIfPluginsAdminIsDisabled()
@@ -245,6 +178,7 @@ class Controller extends Plugin\ControllerAdmin
         $view->activateNonce = Nonce::getNonce(static::ACTIVATE_NONCE);
         $view->uninstallNonce = Nonce::getNonce(static::UNINSTALL_NONCE);
         $view->deactivateNonce = Nonce::getNonce(static::DEACTIVATE_NONCE);
+        $view->installNonce = Nonce::getNonce(static::INSTALL_NONCE);
         $view->pluginsInfo = $this->getPluginsInfo($themesOnly);
 
         $users = Request::processRequest('UsersManager.getUsers');
@@ -252,15 +186,16 @@ class Controller extends Plugin\ControllerAdmin
         $view->themeEnabled = \Piwik\Plugin\Manager::getInstance()->getThemeEnabled()->getPluginName();
 
         $view->pluginNamesHavingSettings = $this->getPluginNamesHavingSettingsForCurrentUser();
-        $view->isMarketplaceEnabled = CorePluginsAdmin::isMarketplaceEnabled();
+        $view->isMarketplaceEnabled = Marketplace::isMarketplaceEnabled();
         $view->isPluginsAdminEnabled = CorePluginsAdmin::isPluginsAdminEnabled();
+        $view->isMultiServerEnvironment = SettingsPiwik::isMultiServerEnvironment();
 
         $view->pluginsHavingUpdate    = array();
         $view->marketplacePluginNames = array();
 
-        if (CorePluginsAdmin::isMarketplaceEnabled()) {
+        if (Marketplace::isMarketplaceEnabled()) {
             try {
-                $marketplace = new Marketplace();
+                $marketplace = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
                 $view->marketplacePluginNames = $marketplace->getAvailablePluginNames($themesOnly);
 
                 $pluginsHavingUpdate = $marketplace->getPluginsHavingUpdate(true);

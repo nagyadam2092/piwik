@@ -38,7 +38,7 @@ $(document).ready(function () {
             pluginName = value.substr(0, value.indexOf('!'));
         }
 
-        var url = 'module=CorePluginsAdmin&action=pluginDetails&pluginName=' + encodeURIComponent(pluginName);
+        var url = 'module=Marketplace&action=pluginDetails&pluginName=' + encodeURIComponent(pluginName);
 
         if (activeTab) {
             url += '&activeTab=' + encodeURIComponent(activeTab);

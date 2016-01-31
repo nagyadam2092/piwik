@@ -6,31 +6,36 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
  */
-namespace Piwik\Plugins\CorePluginsAdmin;
+namespace Piwik\Plugins\Marketplace;
 
 use Piwik\Date;
 use Piwik\Plugin\Dependency as PluginDependency;
+use Piwik\Plugin;
 
 /**
  *
  */
-class Marketplace
+class Plugins
 {
     /**
-     * @var MarketplaceApiClient
+     * @var Api\Client
      */
-    private $client;
+    private $marketplaceClient;
 
-    public function __construct()
+    /**
+     * @var Consumer
+     */
+    private $consumer;
+    
+    public function __construct(Api\Client $marketplaceClient, Consumer $consumer)
     {
-        $this->client = new MarketplaceApiClient();
+        $this->marketplaceClient = $marketplaceClient;
+        $this->consumer = $consumer;
     }
 
     public function getPluginInfo($pluginName)
     {
-        $marketplace = new MarketplaceApiClient();
-
-        $plugin = $marketplace->getPluginInfo($pluginName);
+        $plugin = $this->marketplaceClient->getPluginInfo($pluginName);
         $plugin = $this->enrichPluginInformation($plugin);
 
         return $plugin;
@@ -39,9 +44,9 @@ class Marketplace
     public function getAvailablePluginNames($themesOnly)
     {
         if ($themesOnly) {
-            $plugins = $this->client->searchForThemes('', '', '');
+            $plugins = $this->marketplaceClient->searchForThemes('', '', '', '');
         } else {
-            $plugins = $this->client->searchForPlugins('', '', '');
+            $plugins = $this->marketplaceClient->searchForPlugins('', '', '', '');
         }
 
         $names = array();
@@ -60,19 +65,40 @@ class Marketplace
         );
     }
 
-    public function searchPlugins($query, $sort, $themesOnly)
+    public function searchPlugins($query, $sort, $themesOnly, $purchaseType = '')
     {
         if ($themesOnly) {
-            $plugins = $this->client->searchForThemes('', $query, $sort);
+            $plugins = $this->marketplaceClient->searchForThemes('', $query, $sort, $purchaseType);
         } else {
-            $plugins = $this->client->searchForPlugins('', $query, $sort);
+            $plugins = $this->marketplaceClient->searchForPlugins('', $query, $sort, $purchaseType);
         }
 
+        $whitelistedDistributors = $this->consumer->getWhitelistedGithubOrgs();
+
         foreach ($plugins as $key => $plugin) {
-            $plugins[$key] = $this->enrichPluginInformation($plugin);
+            if (!empty($whitelistedDistributors) &&
+                !$this->isPluginDevelopedByDistributors($plugin, $whitelistedDistributors)) {
+                // for piwik pro clients we do not allow to install any 3rd party plugins
+                unset($plugins[$key]);
+            } else {
+                $plugins[$key] = $this->enrichPluginInformation($plugin);
+            }
         }
 
         return $plugins;
+    }
+
+    private function isPluginDevelopedByDistributors($plugin, $whitelistedDistributors)
+    {
+        if (empty($plugin['owner'])) {
+            return false;
+        }
+
+        $whitelistedDistributors = array_map('strtolower', $whitelistedDistributors);
+
+        $owner = strtolower($plugin['owner']);
+
+        return in_array($owner, $whitelistedDistributors, $strict = true);
     }
 
     private function getPluginUpdateInformation($plugin)
@@ -108,7 +134,7 @@ class Marketplace
         $loadedPlugins = $pluginManager->getLoadedPlugins();
 
         try {
-            $pluginsHavingUpdate = $this->client->getInfoOfPluginsHavingUpdate($loadedPlugins, $themesOnly);
+            $pluginsHavingUpdate = $this->marketplaceClient->getInfoOfPluginsHavingUpdate($loadedPlugins, $themesOnly);
         } catch (\Exception $e) {
             $pluginsHavingUpdate = array();
         }
@@ -138,9 +164,22 @@ class Marketplace
 
     private function enrichPluginInformation($plugin)
     {
-        $plugin['isInstalled']  = \Piwik\Plugin\Manager::getInstance()->isPluginLoaded($plugin['name']);
+        $plugin['isInstalled']  = Plugin\Manager::getInstance()->isPluginLoaded($plugin['name']);
         $plugin['canBeUpdated'] = $plugin['isInstalled'] && $this->hasPluginUpdate($plugin);
-        $plugin['lastUpdated']  = Date::factory($plugin['lastUpdated'])->getLocalized(Date::DATE_FORMAT_SHORT);
+        $plugin['lastUpdated'] = $this->toShortDate($plugin['lastUpdated']);
+
+        if (!empty($plugin['owner'])
+            && strtolower($plugin['owner']) === 'piwikpro'
+            && !empty($plugin['homepage'])
+            && strpos($plugin['homepage'], 'pk_campaign') === false) {
+
+            if (strpos($plugin['homepage'], '?') === false) {
+                $plugin['homepage'] .= '?';
+            } else {
+                $plugin['homepage'] .= '&';
+            }
+            $plugin['homepage'] .= 'pk_campaign=Upgrade_to_Pro&pk_medium=Marketplace&pk_source=Piwik_App&pk_content=' . $plugin['name'];
+        }
 
         if ($plugin['canBeUpdated']) {
             $pluginUpdate = $this->getPluginUpdateInformation($plugin);
@@ -149,23 +188,40 @@ class Marketplace
         }
 
         if (!empty($plugin['activity']['lastCommitDate'])
-            && false === strpos($plugin['activity']['lastCommitDate'], '0000')) {
-
-            $plugin['activity']['lastCommitDate'] = Date::factory($plugin['activity']['lastCommitDate'])->getLocalized(Date::DATE_FORMAT_LONG);
+            && false === strpos($plugin['activity']['lastCommitDate'], '0000')
+            && false === strpos($plugin['activity']['lastCommitDate'], '1970')) {
+            $plugin['activity']['lastCommitDate'] = $this->toLongDate($plugin['activity']['lastCommitDate']);
         } else {
             $plugin['activity']['lastCommitDate'] = null;
         }
 
         if (!empty($plugin['versions'])) {
-
             foreach ($plugin['versions'] as $index => $version) {
-                $plugin['versions'][$index]['release'] = Date::factory($version['release'])->getLocalized(Date::DATE_FORMAT_LONG);
+                $plugin['versions'][$index]['release'] = $this->toLongDate($version['release']);
             }
         }
 
         $plugin = $this->addMissingRequirements($plugin);
 
         return $plugin;
+    }
+
+    private function toLongDate($date)
+    {
+        if (!empty($date)) {
+            $date = Date::factory($date)->getLocalized(Date::DATE_FORMAT_LONG);
+        }
+
+        return $date;
+    }
+
+    private function toShortDate($date)
+    {
+        if (!empty($date)) {
+            $date = Date::factory($date)->getLocalized(Date::DATE_FORMAT_SHORT);
+        }
+
+        return $date;
     }
 
     /**

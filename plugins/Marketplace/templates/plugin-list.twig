@@ -1,11 +1,11 @@
 <div class="row marketplace-max-width">
 
     {# Hide filters and search for themes because we don't have many of them #}
-    {% if not showThemes %}
+    {% if (pluginsToShow|length) > 20 or query %}
         <div class="col-sm-12 clearfix">
 
             <form action="{{ linkTo({'sort': ''}) }}" method="post" class="plugin-search">
-                <input value="{{ query }}" placeholder="{{ 'General_Search'|translate }} {{ plugins|length }} {{ 'General_Plugins'|translate|lcfirst }}..." type="text" name="query"/>
+                <input value="{{ query }}" placeholder="{{ 'General_Search'|translate }} {{ numAvailablePlugins }} {{ 'General_Plugins'|translate|lcfirst }}..." type="text" name="query"/>
                 <button type="submit">{{ 'General_Search'|translate }}</button>
             </form>
 
@@ -30,7 +30,17 @@
         </div>
     {% endif %}
 
-    {% for plugin in plugins %}
+    {% if pluginsToShow|length == 0 %}
+        <div class="col-sm-12 clearfix">
+            {% if showThemes %}
+                {{ 'CorePluginsAdmin_NoThemesFound'|translate }}
+            {% else %}
+                {{ 'CorePluginsAdmin_NoPluginsFound'|translate }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% for plugin in pluginsToShow %}
 
         <div class="col-md-4">
             <div class="panel plugin">
@@ -57,36 +67,51 @@
 
                     <ul class="metadata">
                         <li>
-                            {{ 'CorePluginsAdmin_Version'|translate }}: {{ plugin.latestVersion }}
+                            {% if plugin.latestVersion %}
+                                {{ 'CorePluginsAdmin_Version'|translate }}: {{ plugin.latestVersion }}
+                            {% endif %}
                             {% if plugin.canBeUpdated %}
-                                <a class="plugin-details update-available" href="#" data-pluginName="{{ plugin.name }}" data-activePluginTab="changelog"
-                                   title="{{ 'CorePluginsAdmin_PluginUpdateAvailable'|translate(plugin.currentVersion, plugin.latestVersion) }}">
-                                    {{ 'CorePluginsAdmin_NewVersion'|translate }}</a>
+                                    <a class="plugin-details update-available" href="#" data-pluginName="{{ plugin.name }}" data-activePluginTab="changelog"
+                                       title="{{ 'CorePluginsAdmin_PluginUpdateAvailable'|translate(plugin.currentVersion, plugin.latestVersion) }}">
+                                        {{ 'CorePluginsAdmin_NewVersion'|translate }}</a>
                             {% endif %}
                         </li>
-                        <li>{{ 'CorePluginsAdmin_Updated'|translate }}: {{ plugin.lastUpdated }}</li>
-                        <li>{{ 'General_Downloads'|translate }}: {{ plugin.numDownloads }}</li>
+                        {% if plugin.lastUpdated %}
+                            <li>{{ 'CorePluginsAdmin_Updated'|translate }}: {{ plugin.lastUpdated }}</li>
+                        {% endif %}
+                        {% if plugin.numDownloads %}
+                            <li>{{ 'General_Downloads'|translate }}: {{ plugin.numDownloads }}</li>
+                        {% endif %}
                         <li>{{ 'CorePluginsAdmin_Developer'|translate }}: {{ pluginsMacro.pluginDeveloper(plugin.owner) }}</li>
                     </ul>
                 </div>
 
                 {% if isSuperUser %}
                     <div class="panel-footer" data-pluginName="{{ plugin.name }}">
-                        {% if plugin.canBeUpdated and 0 == plugin.missingRequirements|length %}
+
+                        {% if plugin.canBeUpdated and 0 == plugin.missingRequirements|length and not isMultiServerEnvironment %}
                             <a class="btn btn-block"
                                href="{{ linkTo({'action':'updatePlugin', 'pluginName': plugin.name, 'nonce': updateNonce}) }}">
                                 {{ 'CoreUpdater_UpdateTitle'|translate }}
+                            </a>
+                        {% elseif plugin.missingRequirements|length > 0 or isMultiServerEnvironment %}
+                            <a class="btn btn-link btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">
+                                {% if plugin.canBeUpdated and 0 == plugin.missingRequirements|length %}
+                                    {{ 'CorePluginsAdmin_CannotUpdate'|translate }}
+                                {% else %}
+                                    {{ 'CorePluginsAdmin_CannotInstall'|translate }}
+                                {% endif %}
                             </a>
                         {% elseif plugin.isInstalled %}
                             <button class="btn btn-noop btn-block">
                                 {{ 'General_Installed'|translate }}
                             </button>
-                        {% elseif plugin.missingRequirements|length > 0 %}
+                        {% elseif plugin.isPaid and not plugin.isDownloadable %}
                             <a class="btn btn-link btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">
-                                {{ 'CorePluginsAdmin_CannotInstall'|translate }}
+                                {{ 'General_MoreDetails'|translate }}
                             </a>
                         {% else %}
-                            <a href="{{ linkTo({'action': 'installPlugin', 'pluginName': plugin.name, 'nonce': installNonce}) }}"
+                            <a href="{{ linkTo({'action': 'installPlugin','module': 'CorePluginsAdmin', 'pluginName': plugin.name, 'nonce': installNonce}) }}"
                                class="btn btn-block">
                                 {{ 'CorePluginsAdmin_ActionInstall'|translate }}
                             </a>
@@ -96,15 +121,6 @@
 
             </div>
         </div>
-
     {% endfor %}
-
-    {% if plugins|length == 0 %}
-        {% if showThemes %}
-            {{ 'CorePluginsAdmin_NoThemesFound'|translate }}
-        {% else %}
-            {{ 'CorePluginsAdmin_NoPluginsFound'|translate }}
-        {% endif %}
-    {% endif %}
 
 </div>
