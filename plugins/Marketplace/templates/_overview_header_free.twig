@@ -1,0 +1,49 @@
+<div class="marketplace-max-width">
+    <p>
+        {% if not isSuperUser %}
+            {% if showThemes %}
+                {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplaceThemes'|translate }}
+            {% else %}
+                {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
+            {% endif %}
+
+        {% elseif whitelistedGithubOrgs and whitelistedGithubOrgs|length and distributor and distributor.getName %}
+            {% set whitelistedOrgs %}
+                {% for githubOrg in whitelistedGithubOrgs -%}
+                    {%- if loop.first -%}
+                    {%- elseif loop.last %}
+                        {{ 'General_And'|translate }}
+                    {% else %},
+                    {% endif -%}
+                    {{ githubOrg }}
+                {%- endfor %}
+            {% endset %}
+
+            {{ 'Marketplace_FreePluginsLimited'|translate(distributorLink, whitelistedOrgs)|raw }}
+
+        {% elseif showThemes %}
+                {{ 'CorePluginsAdmin_ThemesDescription'|translate }}
+                {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
+                <br />
+                {{ 'CorePluginsAdmin_BeCarefulUsingThemes'|translate }}
+        {% else %}
+                {{ 'CorePluginsAdmin_PluginsExtendPiwik'|translate }}
+                {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
+                <br/>
+                {{ 'CorePluginsAdmin_BeCarefulUsingPlugins'|translate }}
+        {% endif %}
+    </p>
+</div>
+
+<div class="ui-confirm" id="installPluginByUpload">
+    <h2>{{ 'CorePluginsAdmin_TeaserExtendPiwikByUpload'|translate }}</h2>
+
+    <p class="description"> {{ 'CorePluginsAdmin_AllowedUploadFormats'|translate }} </p>
+
+    <form enctype="multipart/form-data" method="post" id="uploadPluginForm"
+          action="{{ linkTo({'action':'uploadPlugin', 'nonce': installNonce}) }}">
+        <input type="file" name="pluginZip">
+        <br />
+        <input class="startUpload" type="submit" value="{{ 'CorePluginsAdmin_UploadZipFile'|translate }}">
+    </form>
+</div>

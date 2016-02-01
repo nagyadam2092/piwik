@@ -1,0 +1,50 @@
+{% set defaultLicenseKeyFields %}
+    <input type="password" placeholder="{{ 'Marketplace_LicenseKey'|translate|e('html_attr') }}"
+           id="license_key">
+    <input disabled="disabled" class="btn" type="button"
+           id="submit_license_key"
+           value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
+{% endset %}
+
+<div class="marketplace-max-width">
+    <p>
+        {% if consumer is defined and consumer and consumer.name %}
+            {% if isSuperUser %}
+                {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
+                    {{ 'Marketplace_PaidPluginsWithLicenseKeyAndExpireDayIntro'|translate(distributorLink, consumer.expireDateLong, distributorLink)|raw }}
+                {% else %}
+                    {{ 'Marketplace_PaidPluginsWithLicenseKeyAndNoExpireDayIntro'|translate(distributorLink)|raw }}
+                {% endif %}
+
+                {% if consumer.showWarningLicenseExpiresSoon %}
+                    <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
+                {% endif %}
+
+                <br /><br />
+
+                {{ defaultLicenseKeyFields|raw }}
+                <input id="remove_license_key" class="btn" type="button" value="{{ 'Marketplace_RemoveLicenseKey'|translate|e('html_attr') }}">
+
+            {% else %}
+                {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
+            {% endif %}
+
+        {% else %}
+
+            {% set upgradePiwikProLink = 'Marketplace'|piwikProOnPremisesPromoUrl %}
+            {% set piwikProLink = 'https://piwik.pro'|piwikProCampaignParameters('Marketplace', 'Marketplace', 'User') %}
+
+            {% if isSuperUser %}
+                {{ 'Marketplace_PaidPluginsNoLicenseKeyIntro'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
+
+                <br /><br />
+
+                {{ defaultLicenseKeyFields|raw }}
+
+            {% else %}
+                {{ 'Marketplace_PaidPluginsNoLicenseKeyIntroNoSuperUserAccess'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
+            {% endif %}
+
+        {% endif %}
+    </p>
+</div>

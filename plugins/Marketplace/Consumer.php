@@ -55,18 +55,18 @@ class Consumer
     }
 
     /**
-     * Gets a list of restricted github organizations. Returns false if all plugins are meant to be shown.
+     * Gets a list of restricted github organizations. Returns an empty array if all plugins are meant to be shown.
      * Returns a list of github organizations (lower case) if only plugins of specific github organizations are supposed
      * to be shown in the Marketplace UI.
      *
-     * @return array|false
+     * @return array
      */
     public function getWhitelistedGithubOrgs()
     {
         $whitelist = Config::getInstance()->Marketplace['whitelisted_github_orgs'];
 
         if ($whitelist === 'all') {
-            return false;
+            return array();
         }
 
         if (empty($whitelist) && $this->hasAccessToPaidPlugins()) {
@@ -79,7 +79,7 @@ class Consumer
 
             return $githubOrgs;
         } elseif (empty($whitelist)) {
-            return false;
+            return array();
         }
 
         $githubOrgs = explode(',', $whitelist);

@@ -1,9 +1,7 @@
 <div class="row marketplace-max-width">
 
-    {# Hide filters and search for themes because we don't have many of them #}
     {% if (pluginsToShow|length) > 20 or query %}
         <div class="col-sm-12 clearfix">
-
             <form action="{{ linkTo({'sort': ''}) }}" method="post" class="plugin-search">
                 <input value="{{ query }}" placeholder="{{ 'General_Search'|translate }} {{ numAvailablePlugins }} {{ 'General_Plugins'|translate|lcfirst }}..." type="text" name="query"/>
                 <button type="submit">{{ 'General_Search'|translate }}</button>

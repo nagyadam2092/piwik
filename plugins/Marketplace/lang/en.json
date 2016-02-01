@@ -10,7 +10,7 @@
     "RemoveLicenseKey": "Remove license key",
     "PaidPluginsNoLicenseKeyIntro": "Premium features are available for free to all %1$sPiwik PRO%2$s customers. Please insert a licence key below, or get %3$smore details%4$s.",
     "PaidPluginsWithLicenseKeyAndExpireDayIntro": "Dear %1$s customer, your licence key is valid until %2$s. In case of any questions or problems, please contact us. Enjoy!",
-    "PaidPluginsWithLicenseKeyIntro": "Dear %1$s customer, in case of any questions or problems, please contact us. Enjoy!",
+    "PaidPluginsWithLicenseKeyAndNoExpireDayIntro": "Dear %1$s customer, in case of any questions or problems, please contact us. Enjoy!",
     "PaidPluginsNoLicenseKeyIntroNoSuperUserAccess": "Premium features are available for free to all %1$sPiwik PRO%2$s customers, get %3$smore details%4$s.",
     "LicenseKeyExpiresSoon": "Your license key expires soon, please contact %1$s.",
     "FreePluginsLimited": "As a %1$s customer, you can only install plugins developed by %2$s to ensure your Piwik is stable and safe.",

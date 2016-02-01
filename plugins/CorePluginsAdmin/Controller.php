@@ -11,7 +11,6 @@ namespace Piwik\Plugins\CorePluginsAdmin;
 use Exception;
 use Piwik\API\Request;
 use Piwik\Common;
-use Piwik\Container\StaticContainer;
 use Piwik\Exception\MissingFilePermissionException;
 use Piwik\Filechecks;
 use Piwik\Filesystem;
@@ -20,6 +19,7 @@ use Piwik\Notification;
 use Piwik\Piwik;
 use Piwik\Plugin;
 use Piwik\Plugins\Marketplace\Marketplace;
+use Piwik\Plugins\Marketplace\Plugins;
 use Piwik\Settings\Manager as SettingsManager;
 use Piwik\SettingsPiwik;
 use Piwik\Translation\Translator;
@@ -45,10 +45,16 @@ class Controller extends Plugin\ControllerAdmin
      */
     private $pluginInstaller;
 
-    public function __construct(Translator $translator, PluginInstaller $pluginInstaller)
+    /**
+     * @var Plugins
+     */
+    private $marketplacePlugins;
+
+    public function __construct(Translator $translator, PluginInstaller $pluginInstaller, Plugins $marketplacePlugins)
     {
         $this->translator = $translator;
         $this->pluginInstaller = $pluginInstaller;
+        $this->marketplacePlugins = $marketplacePlugins;
 
         parent::__construct();
     }
@@ -75,8 +81,7 @@ class Controller extends Plugin\ControllerAdmin
             return;
         }
 
-        $marketplace = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
-        $view->plugin = $marketplace->getPluginInfo($pluginName);
+        $view->plugin = $this->marketplacePlugins->getPluginInfo($pluginName);
 
         return $view;
     }
@@ -195,11 +200,10 @@ class Controller extends Plugin\ControllerAdmin
 
         if (Marketplace::isMarketplaceEnabled()) {
             try {
-                $marketplace = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
-                $view->marketplacePluginNames = $marketplace->getAvailablePluginNames($themesOnly);
+                $view->marketplacePluginNames = $this->marketplacePlugins->getAvailablePluginNames($themesOnly);
 
-                $pluginsHavingUpdate = $marketplace->getPluginsHavingUpdate(true);
-                $themesHavingUpdate  = $marketplace->getPluginsHavingUpdate(false);
+                $pluginsHavingUpdate = $this->marketplacePlugins->getPluginsHavingUpdate(true);
+                $themesHavingUpdate  = $this->marketplacePlugins->getPluginsHavingUpdate(false);
                 $view->pluginsHavingUpdate    = $pluginsHavingUpdate + $themesHavingUpdate;
             } catch(Exception $e) {
                 // curl exec connection error (ie. server not connected to internet)

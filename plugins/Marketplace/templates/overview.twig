@@ -54,106 +54,12 @@
         </ul>
 
         {% if showPaid %}
-            <div class="marketplace-max-width">
-                <p>
-                    {% if consumer is defined and consumer and consumer.name %}
-                        {% if isSuperUser %}
-                            {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
-                                {{ 'Marketplace_PaidPluginsWithLicenseKeyAndExpireDayIntro'|translate(distributorLink, consumer.expireDateLong, distributorLink)|raw }}
-                            {% else %}
-                                {{ 'Marketplace_PaidPluginsWithLicenseKeyIntro'|translate(distributorLink)|raw }}
-                            {% endif %}
-
-                            {% if consumer.showWarningLicenseExpiresSoon %}
-                                <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
-                            {% endif %}
-
-                            <br /><br />
-                            <input type="password" id="license_key" placeholder="{{ 'Marketplace_LicenseKey'|translate|e('html_attr') }}">
-                            <input disabled="disabled" id="submit_license_key" class="btn" type="button" value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
-                            <input id="remove_license_key" class="btn" type="button" value="{{ 'Marketplace_RemoveLicenseKey'|translate|e('html_attr') }}">
-
-                        {% else %}
-                            {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
-                        {% endif %}
-
-                    {% else %}
-
-                        {% set upgradePiwikProLink = 'Marketplace'|piwikProOnPremisesPromoUrl %}
-                        {% set piwikProLink = 'https://piwik.pro'|piwikProCampaignParameters('Marketplace', 'Marketplace', 'User') %}
-
-                        {% if isSuperUser %}
-                            {{ 'Marketplace_PaidPluginsNoLicenseKeyIntro'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
-
-                            <br /><br />
-                            <input type="password" placeholder="{{ 'Marketplace_LicenseKey'|translate|e('html_attr') }}" id="license_key">
-                            <input disabled="disabled" id="submit_license_key" class="btn" type="button"
-                                   value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
-                        {% else %}
-                            {{ 'Marketplace_PaidPluginsNoLicenseKeyIntroNoSuperUserAccess'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
-                        {% endif %}
-
-                    {% endif %}
-                </p>
-
-                <hr/>
-            </div>
+            {% include '@Marketplace/_overview_header_paid.twig' %}
         {% else %}
-            <div class="marketplace-max-width">
-
-                {% if whitelistedGithubOrgs and distributor and distributor.getName %}
-                    {% set whitelistedOrgs %}
-                        {% for githubOrg in whitelistedGithubOrgs -%}
-                            {%- if loop.first -%}
-                            {%- elseif loop.last %}
-                                and
-                            {% else %},
-                            {% endif -%}
-                            {{ githubOrg }}
-                        {%- endfor %}
-                    {% endset %}
-                    {{ 'Marketplace_FreePluginsLimited'|translate(distributorLink, whitelistedOrgs)|raw }}
-                {% elseif showThemes and isSuperUser %}
-                    <p>
-                        {{ 'CorePluginsAdmin_ThemesDescription'|translate }}
-                        {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
-                        <br />
-                        {{ 'CorePluginsAdmin_BeCarefulUsingThemes'|translate }}
-                    </p>
-                {% elseif isSuperUser %}
-                    <p>
-                        {{ 'CorePluginsAdmin_PluginsExtendPiwik'|translate }}
-                        {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
-                        <br/>
-                        {{ 'CorePluginsAdmin_BeCarefulUsingPlugins'|translate }}
-                    </p>
-                {% else %}
-                    <p>
-                        {% if showThemes %}
-                            {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplaceThemes'|translate }}
-                        {% else %}
-                            {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
-                        {% endif %}
-                    </p>
-                {% endif %}
-
-            </div>
-
-            <hr/>
-            <div class="ui-confirm" id="installPluginByUpload">
-                <h2>{{ 'CorePluginsAdmin_TeaserExtendPiwikByUpload'|translate }}</h2>
-
-                <p class="description"> {{ 'CorePluginsAdmin_AllowedUploadFormats'|translate }} </p>
-
-                <form enctype="multipart/form-data" method="post" id="uploadPluginForm"
-                      action="{{ linkTo({'action':'uploadPlugin', 'nonce': installNonce}) }}">
-                    <input type="file" name="pluginZip">
-                    <br />
-                    <input class="startUpload" type="submit" value="{{ 'CorePluginsAdmin_UploadZipFile'|translate }}">
-                </form>
-            </div>
-
+            {% include '@Marketplace/_overview_header_free.twig' %}
         {% endif %}
+
+        <hr/>
 
         {% include '@Marketplace/plugin-list.twig' %}
 
