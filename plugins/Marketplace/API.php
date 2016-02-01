@@ -64,6 +64,8 @@ class API extends \Piwik\Plugin\API
     {
         Piwik::checkUserHasSuperUserAccess();
 
+        $licenseKey = trim($licenseKey);
+
         $this->marketplaceService->authenticate($licenseKey);
 
         try {

@@ -9,6 +9,7 @@
 namespace Piwik\Plugins\Marketplace;
 
 use Piwik\Date;
+use Piwik\PiwikPro\Advertising;
 use Piwik\Plugin\Dependency as PluginDependency;
 use Piwik\Plugin;
 
@@ -26,11 +27,17 @@ class Plugins
      * @var Consumer
      */
     private $consumer;
+
+    /**
+     * @var Advertising
+     */
+    private $advertising;
     
-    public function __construct(Api\Client $marketplaceClient, Consumer $consumer)
+    public function __construct(Api\Client $marketplaceClient, Consumer $consumer, Advertising $advertising)
     {
         $this->marketplaceClient = $marketplaceClient;
         $this->consumer = $consumer;
+        $this->advertising = $advertising;
     }
 
     public function getPluginInfo($pluginName)
@@ -172,13 +179,7 @@ class Plugins
             && strtolower($plugin['owner']) === 'piwikpro'
             && !empty($plugin['homepage'])
             && strpos($plugin['homepage'], 'pk_campaign') === false) {
-
-            if (strpos($plugin['homepage'], '?') === false) {
-                $plugin['homepage'] .= '?';
-            } else {
-                $plugin['homepage'] .= '&';
-            }
-            $plugin['homepage'] .= 'pk_campaign=Upgrade_to_Pro&pk_medium=Marketplace&pk_source=Piwik_App&pk_content=' . $plugin['name'];
+            $plugin['homepage'] = $this->advertising->addPromoCampaignParametersToUrl($plugin['homepage'], Advertising::CAMPAIGN_NAME_UPGRADE_TO_PRO, 'Marketplace', $plugin['name']);
         }
 
         if ($plugin['canBeUpdated']) {

@@ -24,7 +24,6 @@
                     </p>
                 </div>
                 <div class="width:25%;float:left;">
-
                     {% if not plugin.isDownloadable or not isSuperUser %}
                         <a class="install update" target="_blank"
                            href="{{ plugin.homepage|e('html_attr') }}"
@@ -71,10 +70,9 @@
                             {{ pluginsMacro.missingRequirementsPleaseUpdateNotice(plugin) }}
 
                             {% if isMultiServerEnvironment %}
-                                <div class="alert alert-warning">You cannot install the plugin directly as you are using
-                                 Piwik on multiple servers. The plugin would be only installed on one server. Instead download
-                                 the plugin and deploy it manually to all your servers.</div>
+                                <div class="alert alert-warning">{{ 'Marketplace_MultiServerEnvironmentWarning'|translate }}</div>
                             {% endif %}
+
                             {{ latestVersion.readmeHtml.description|raw }}
                         </div>
 

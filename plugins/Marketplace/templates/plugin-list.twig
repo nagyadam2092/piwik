@@ -70,15 +70,18 @@
                             {% if plugin.latestVersion %}
                                 {{ 'CorePluginsAdmin_Version'|translate }}: {{ plugin.latestVersion }}
                             {% endif %}
+
                             {% if plugin.canBeUpdated %}
                                     <a class="plugin-details update-available" href="#" data-pluginName="{{ plugin.name }}" data-activePluginTab="changelog"
                                        title="{{ 'CorePluginsAdmin_PluginUpdateAvailable'|translate(plugin.currentVersion, plugin.latestVersion) }}">
                                         {{ 'CorePluginsAdmin_NewVersion'|translate }}</a>
                             {% endif %}
                         </li>
+
                         {% if plugin.lastUpdated %}
                             <li>{{ 'CorePluginsAdmin_Updated'|translate }}: {{ plugin.lastUpdated }}</li>
                         {% endif %}
+
                         {% if plugin.numDownloads %}
                             <li>{{ 'General_Downloads'|translate }}: {{ plugin.numDownloads }}</li>
                         {% endif %}

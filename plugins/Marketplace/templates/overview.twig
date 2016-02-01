@@ -5,6 +5,12 @@
 
 {% block content %}
 
+    {% if distributor and distributor.getName %}
+        {% set distributorLink = '<a rel="noreferrer" target="_blank" href="' ~ distributor.getHomepage|piwikProCampaignParameters('Marketplace', 'Marketplace', 'Client')|e('html_attr') ~ '">'~ distributor.getName ~ '</a>' %}
+    {% else %}
+        {% set distributorLink = '' %}
+    {% endif %}
+    
     <div class="marketplace">
 
         <h2 piwik-enriched-headline feature-name="{{ 'Marketplace_Marketplace'|translate }}">
@@ -12,34 +18,38 @@
         </h2>
 
         <ul class="nav nav-pills">
-            {% if hasAccessToPaidPlugins %}
-                {% if paidPlugins|length or (query and showPaid) %}
-                    <li {% if showPlugins and showPaid %}class="active"{% endif %}>
-                        <a href="{{ linkTo({'show': 'plugins', 'type': 'paid'}) }}">{{ 'Marketplace_PaidPlugins'|translate }}</a>
-                    </li>
-                {% endif %}
-                {% if freePlugins|length or (query and showFree and showPlugins) %}
-                    <li {% if showPlugins and showFree %}class="active"{% endif %}>
-                    <a href="{{ linkTo({'show': 'plugins', 'type': 'free'}) }}">{{ 'Marketplace_FreePlugins'|translate }}</a>
-                </li>
-                {% endif %}
-            {% else %}
-                {% if freePlugins|length or (query and showFree and showPlugins) %}
+            {% set freePluginsLink %}
+                {% if freePlugins|length %}
                     <li {% if showPlugins and showFree %}class="active"{% endif %}>
                         <a href="{{ linkTo({'show': 'plugins', 'type': 'free'}) }}">{{ 'Marketplace_FreePlugins'|translate }}</a>
                     </li>
                 {% endif %}
-                {% if paidPlugins|length or (query and showPaid) %}
+            {% endset %}
+
+            {% set paidPluginsLink %}
+                {% if paidPlugins|length %}
                     <li {% if showPlugins and showPaid %}class="active"{% endif %}>
                         <a href="{{ linkTo({'show': 'plugins', 'type': 'paid'}) }}">{{ 'Marketplace_PaidPlugins'|translate }}</a>
                     </li>
                 {% endif %}
-            {% endif %}
+            {% endset %}
 
-            {% if themes|length or (query and showThemes) %}
-                <li {% if showThemes %}class="active"{% endif %}>
-                    <a href="{{ linkTo({'show': 'themes', 'type': 'free'}) }}">{{ 'Marketplace_FreeThemes'|translate }}</a>
-                </li>
+            {% set freeThemesLink %}
+                {% if themes|length %}
+                    <li {% if showThemes %}class="active"{% endif %}>
+                        <a href="{{ linkTo({'show': 'themes', 'type': 'free'}) }}">{{ 'Marketplace_FreeThemes'|translate }}</a>
+                    </li>
+                {% endif %}
+            {% endset %}
+
+            {% if hasAccessToPaidPlugins %}
+                {{ paidPluginsLink }}
+                {{ freePluginsLink }}
+                {{ freeThemesLink }}
+            {% else %}
+                {{ freePluginsLink }}
+                {{ paidPluginsLink }}
+                {{ freeThemesLink }}
             {% endif %}
         </ul>
 
@@ -47,37 +57,41 @@
             <div class="marketplace-max-width">
                 <p>
                     {% if consumer is defined and consumer and consumer.name %}
+                        {% if isSuperUser %}
+                            {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
+                                {{ 'Marketplace_PaidPluginsWithLicenseKeyAndExpireDayIntro'|translate(distributorLink, consumer.expireDateLong, distributorLink)|raw }}
+                            {% else %}
+                                {{ 'Marketplace_PaidPluginsWithLicenseKeyIntro'|translate(distributorLink)|raw }}
+                            {% endif %}
 
-                        You have access to Paid Plugins as a client of <a target="_blank" href="{{ distributor.getHomepage|e('html_attr') }}">{{ distributor.getName }}</a>.
+                            {% if consumer.showWarningLicenseExpiresSoon %}
+                                <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
+                            {% endif %}
 
-                        {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
-                            The license expires on {{ consumer.expireDateLong }} in about <strong> {{ consumer.expireDateDiff }}</strong>.
+                            <br /><br />
+                            <input type="password" id="license_key" placeholder="{{ 'Marketplace_LicenseKey'|translate|e('html_attr') }}">
+                            <input disabled="disabled" id="submit_license_key" class="btn" type="button" value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
+                            <input id="remove_license_key" class="btn" type="button" value="{{ 'Marketplace_RemoveLicenseKey'|translate|e('html_attr') }}">
+
+                        {% else %}
+                            {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
                         {% endif %}
-
-                        To extend the date of your license or if you experience any troubles contact
-                        <a target="_blank" href="{{ distributor.getHomepage|e('html_attr') }}">{{ distributor.getName }}</a>.
-
-                        {% if consumer.showWarningLicenseExpiresSoon %}
-                            <div class="alert alert-warning">Your license key expires soon, please contact <a target="_blank" href="{{ distributor.getHomepage|e('html_attr') }}">{{ distributor.getName }}</a>.</div>
-                        {% endif %}
-
-                        <br />
-                        <input type="password" id="license_key" placeholder="License key">
-                        <input disabled="disabled" id="submit_license_key" class="btn" type="button" value="Update license key">
-                        <input id="remove_license_key" class="btn" type="button" value="Remove license key">
 
                     {% else %}
 
-                        {% set linkOnPremises = 'Installation_End'|piwikProOnPremisesPromoLink %}
-                        {% set linkMoreDetails = 'https://piwik.pro/c/upgrade/?pk_campaign=Upgrade_to_Pro&pk_medium=Marketplace&pk_source=Piwik_App' %}
+                        {% set upgradePiwikProLink = 'Marketplace'|piwikProOnPremisesPromoUrl %}
+                        {% set piwikProLink = 'https://piwik.pro'|piwikProCampaignParameters('Marketplace', 'Marketplace', 'User') %}
 
+                        {% if isSuperUser %}
+                            {{ 'Marketplace_PaidPluginsNoLicenseKeyIntro'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
 
-                        {{ 'Marketplace_PaidPluginsNoLicenseKeyIntro'|translate()|raw }}
-                        Paid plugins are available to <a href="https://piwik.pro/cloud">Piwik Pro Cloud</a> and
-                        <a href="https://piwik.pro/enterprise/">Piwik Pro On-Premises</a> clients.
-                        To be able to download paid plugins enter your license key that you have received here. If you do not have a license key
-                        yet contact <a target="_blank" href="https://piwik.pro/">Piwik PRO</a>.<br />
-                        <input type="password" placeholder="License key" id="license_key"> <input disabled="disabled" id="submit_license_key" class="btn" type="button" value="Activate">
+                            <br /><br />
+                            <input type="password" placeholder="{{ 'Marketplace_LicenseKey'|translate|e('html_attr') }}" id="license_key">
+                            <input disabled="disabled" id="submit_license_key" class="btn" type="button"
+                                   value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
+                        {% else %}
+                            {{ 'Marketplace_PaidPluginsNoLicenseKeyIntroNoSuperUserAccess'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}
+                        {% endif %}
 
                     {% endif %}
                 </p>
@@ -87,28 +101,33 @@
         {% else %}
             <div class="marketplace-max-width">
 
-                    {% if whitelistedGithubOrgs and distributor and distributor.getName %}
-                        <div class="alert alert-info">
-                            As a <a target="_blank" href="{{ distributor.getHomepage|e('html_attr') }}">{{ distributor.getName }}</a> client you can only install plugins developed by organizations of {{ whitelistedGithubOrgs|join(' and ') }} to ensure your
-                            Piwik is stable and safe.
-                        </div>
-                    {% elseif showThemes %}
-                        <p>
-                            {{ 'CorePluginsAdmin_ThemesDescription'|translate }}
-                            {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
-                            <br />
-                            {{ 'CorePluginsAdmin_BeCarefulUsingThemes'|translate }}
-                        </p>
-                    {% else %}
-                        <p>
-                            {{ 'CorePluginsAdmin_PluginsExtendPiwik'|translate }}
-                            {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
-                            <br/>
-                            {{ 'CorePluginsAdmin_BeCarefulUsingPlugins'|translate }}
-                        </p>
-                    {% endif %}
-
-                {% if not isSuperUser %}
+                {% if whitelistedGithubOrgs and distributor and distributor.getName %}
+                    {% set whitelistedOrgs %}
+                        {% for githubOrg in whitelistedGithubOrgs -%}
+                            {%- if loop.first -%}
+                            {%- elseif loop.last %}
+                                and
+                            {% else %},
+                            {% endif -%}
+                            {{ githubOrg }}
+                        {%- endfor %}
+                    {% endset %}
+                    {{ 'Marketplace_FreePluginsLimited'|translate(distributorLink, whitelistedOrgs)|raw }}
+                {% elseif showThemes and isSuperUser %}
+                    <p>
+                        {{ 'CorePluginsAdmin_ThemesDescription'|translate }}
+                        {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
+                        <br />
+                        {{ 'CorePluginsAdmin_BeCarefulUsingThemes'|translate }}
+                    </p>
+                {% elseif isSuperUser %}
+                    <p>
+                        {{ 'CorePluginsAdmin_PluginsExtendPiwik'|translate }}
+                        {{ 'CorePluginsAdmin_InstallingNewPluginViaMarketplaceOrUpload'|translate('<a href="#" class="uploadPlugin">','</a>')|raw }}
+                        <br/>
+                        {{ 'CorePluginsAdmin_BeCarefulUsingPlugins'|translate }}
+                    </p>
+                {% else %}
                     <p>
                         {% if showThemes %}
                             {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplaceThemes'|translate }}
