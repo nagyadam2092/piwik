@@ -21,6 +21,7 @@ use Piwik\Piwik;
 use Piwik\Plugin\Manager as PluginManager;
 use Piwik\Plugin;
 use Piwik\Plugins\LanguagesManager\LanguagesManager;
+use Piwik\Plugins\Marketplace\Plugins;
 use Piwik\SettingsServer;
 use Piwik\Updater as DbUpdater;
 use Piwik\Version;
@@ -39,9 +40,15 @@ class Controller extends \Piwik\Plugin\Controller
      */
     private $updater;
 
-    public function __construct(Updater $updater)
+    /**
+     * @var Plugins
+     */
+    private $marketplacePlugins;
+
+    public function __construct(Updater $updater, Plugins $marketplacePlugins)
     {
         $this->updater = $updater;
+        $this->marketplacePlugins = $marketplacePlugins;
 
         parent::__construct();
     }
@@ -65,8 +72,7 @@ class Controller extends \Piwik\Plugin\Controller
         $marketplacePlugins = array();
         try {
             if (!empty($incompatiblePlugins)) {
-                $marketplace = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
-                $marketplacePlugins = $marketplace->getAllAvailablePluginNames();
+                $marketplacePlugins = $this->marketplacePlugins->getAllAvailablePluginNames();
             }
         } catch (\Exception $e) {}
 

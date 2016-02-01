@@ -3,8 +3,5 @@
     "version": "0.1.0",
     "description": "Extend and expand the functionality of Piwik via the Marketplace by downloading plugins and themes.",
     "theme": false,
-    "license": "GPL v3+",
-    "require": {
-        "piwik": ">=2.16.0-b4"
-    }
+    "license": "GPL v3+"
 }

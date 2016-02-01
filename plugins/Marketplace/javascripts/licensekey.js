@@ -37,7 +37,7 @@ $(document).ready(function () {
         $licenseKeySubmit.prop('disabled', !enabled);
     }
 
-    $licenseKeyInput.on('keyup', function () {
+    $licenseKeyInput.on('change keyup', function () {
         var value = $(this).val();
         setLicenseKeyEnabled(!!value);
     });

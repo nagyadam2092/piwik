@@ -77,6 +77,27 @@ class Dependency
         $this->piwikVersion = $piwikVersion;
     }
 
+    public function hasDependencyToDisabledPlugin($requires)
+    {
+        if (empty($requires)) {
+            return false;
+        }
+
+        foreach ($requires as $name => $requiredVersion) {
+            $nameLower = strtolower($name);
+            $isPluginRequire = !in_array($nameLower, array('piwik', 'php'));
+            if ($isPluginRequire) {
+                // we do not check version, only whether it's activated. Everything that is not piwik or php is assumed
+                // a plugin so far.
+                if (!PluginManager::getInstance()->isPluginActivated($name)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function getCurrentVersion($name)
     {
         switch (strtolower($name)) {

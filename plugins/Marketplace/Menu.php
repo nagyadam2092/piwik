@@ -20,7 +20,7 @@ class Menu extends \Piwik\Plugin\Menu
 
     public function configureAdminMenu(MenuAdmin $menu)
     {
-        if (Piwik::hasUserSuperUserAccess() && Marketplace::isMarketplaceEnabled()) {
+        if (Piwik::hasUserSuperUserAccess()) {
             $menu->addManageItem('Marketplace_Marketplace',
                 $this->urlForAction('overview', array('activated' => '', 'mode' => 'admin', 'type' => '', 'show' => '')),
                 $order = 12);
@@ -29,19 +29,11 @@ class Menu extends \Piwik\Plugin\Menu
 
     public function configureUserMenu(MenuUser $menu)
     {
-        if ($this->isAllowedToSeeMarketPlace()) {
+        if (!Piwik::isUserIsAnonymous()) {
             $menu->addPlatformItem('Marketplace_Marketplace',
                                    $this->urlForAction('overview', array('activated' => '', 'mode' => 'user', 'type' => '', 'show' => '')),
                                    $order = 5);
         }
-    }
-
-    private function isAllowedToSeeMarketPlace()
-    {
-        $isAnonymous          = Piwik::isUserIsAnonymous();
-        $isMarketplaceEnabled = Marketplace::isMarketplaceEnabled();
-
-        return $isMarketplaceEnabled && !$isAnonymous;
     }
 
 }

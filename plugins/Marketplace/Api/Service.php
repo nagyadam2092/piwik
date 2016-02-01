@@ -44,7 +44,7 @@ class Service
     {
         if (empty($accessToken)) {
             $this->accessToken = null;
-        } elseif (ctype_xdigit($accessToken)) {
+        } elseif (ctype_alnum($accessToken)) {
             $this->accessToken = $accessToken;
         }
     }
@@ -56,6 +56,20 @@ class Service
     public function getVersion()
     {
         return $this->version;
+    }
+
+    /**
+     * Returns the currently set access token
+     * @return null|string
+     */
+    public function getAccessToken()
+    {
+        return $this->accessToken;
+    }
+
+    public function hasAccessToken()
+    {
+        return !empty($this->accessToken);
     }
 
     /**

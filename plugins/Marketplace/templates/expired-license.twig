@@ -1,0 +1,27 @@
+{% extends 'empty.twig' %}
+{% block content %}
+    <h2>{{ 'Marketplace_LicenseExpired' }}</h2>
+
+    <p>
+        The plugin <strong>{{ pluginName }}</strong> is a paid plugin and currently not accessible as the license key
+        specified in the Marketplace is missing or expired.
+    </p>
+    <p>
+        {% if isSuperUser %}
+            <ul>
+                <li>If you have received a new license key, go to the <a href="{{ linkTo({'module': 'Marketplace', 'action': 'overview', 'type': 'paid'}) }}">Marketplace</a> and update
+                    the license key.</li>
+                <li>If your license key expired and you want to continue using this plugin, please contact <a target="_blank" rel="noreferrer" href="https://piwik.pro">Piwik PRO</a> to renew your license.</li>
+                <li>If you don't want to renew your license, it is recommended to <a href="{{ linkTo({'module': 'CorePluginsAdmin', 'action': 'deactivate', 'pluginName': pluginName, 'nonce': deactivateNonce}) }}">deactivate</a> this plugin.</li>
+                <li>If you have entered a valid license key and it still does not work, contact <a target="_blank" rel="noreferrer" href="https://piwik.pro">Piwik PRO</a></li>
+            </ul>
+
+            <br />
+            {% if isTrackerPlugin %}
+                While you cannot access any data, the tracking functionality of this plugin is still active to make sure you won't lose any data while you are renewing the license.
+            {% endif %}
+        {% else %}
+            To fix this error please contact your Piwik administrator or <a target="_blank" rel="noreferrer" href="https://piwik.pro">Piwik PRO</a>.
+        {% endif %}
+    </p>
+{% endblock %}

@@ -23,7 +23,7 @@ class LicenseKey
     {
         $key = $this->get();
 
-        return !empty($key);
+        return isset($key) && $key !== false && $key !== '';
     }
 
     /**

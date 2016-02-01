@@ -9,7 +9,11 @@
 namespace Piwik\Plugins\Marketplace\Api;
 
 use Piwik\Cache;
+use Piwik\Common;
+use Piwik\Container\StaticContainer;
+use Piwik\Filesystem;
 use Piwik\Http;
+use Piwik\Plugin;
 use Piwik\Plugins\Marketplace\Api\Service;
 use Piwik\SettingsServer;
 use Piwik\Version;
@@ -27,9 +31,21 @@ class Client
      */
     private $service;
 
-    public function __construct(Service $service)
+    /**
+     * @var Cache\Lazy
+     */
+    private $cache;
+
+    /**
+     * @var Plugin\Manager
+     */
+    private $pluginManager;
+
+    public function __construct(Service $service, Cache\Lazy $cache)
     {
         $this->service = $service;
+        $this->cache = $cache;
+        $this->pluginManager = Plugin\Manager::getInstance();
     }
 
     public function getPluginInfo($name)
@@ -50,7 +66,19 @@ class Client
         return $consumer;
     }
 
-    public function download($pluginOrThemeName, $target)
+    private function getRandomTmpPluginDownloadFilename()
+    {
+        $tmpPluginPath = StaticContainer::get('path.tmp') . '/latest/plugins/';
+
+        // we generate a random unique id as filename to prevent any user could possibly download zip directly by
+        // opening $piwikDomain/tmp/latest/plugins/$pluginName.zip in the browser. Instead we make it harder here
+        // and try to make sure to delete file in case of any error.
+        $tmpPluginFolder = Common::generateUniqId();
+
+        return $tmpPluginPath . $tmpPluginFolder . '.zip';
+    }
+
+    public function download($pluginOrThemeName)
     {
         @ignore_user_abort(true);
         SettingsServer::setMaxExecutionTime(0);
@@ -61,22 +89,32 @@ class Client
             return false;
         }
 
+        // in the beginning we allowed to specify a download path but this way we make sure security is always taken
+        // care of and we always generate a random download filename.
+        $target = $this->getRandomTmpPluginDownloadFilename();
+
+        Filesystem::deleteFileIfExists($target);
+
         $success = $this->service->download($downloadUrl, $target, static::HTTP_REQUEST_TIMEOUT);
 
-        return $success;
+        if ($success) {
+            return $target;
+        }
+
+        return false;
     }
 
     /**
      * @param \Piwik\Plugin[] $plugins
      * @return array|mixed
      */
-    public function checkUpdates($plugins)
+    private function checkUpdates($plugins)
     {
         $params = array();
 
         foreach ($plugins as $plugin) {
             $pluginName = $plugin->getPluginName();
-            if (!\Piwik\Plugin\Manager::getInstance()->isPluginBundledWithCore($pluginName)) {
+            if (!$this->pluginManager->isPluginBundledWithCore($pluginName)) {
                 $params[] = array('name' => $plugin->getPluginName(), 'version' => $plugin->getVersion());
             }
         }
@@ -98,20 +136,23 @@ class Client
 
     /**
      * @param  \Piwik\Plugin[] $plugins
-     * @param  bool $themesOnly
      * @return array
      */
-    public function getInfoOfPluginsHavingUpdate($plugins, $themesOnly)
+    public function getInfoOfPluginsHavingUpdate($plugins)
     {
         $hasUpdates = $this->checkUpdates($plugins);
 
         $pluginDetails = array();
 
         foreach ($hasUpdates as $pluginHavingUpdate) {
-            $plugin = $this->getPluginInfo($pluginHavingUpdate['name']);
-            $plugin['repositoryChangelogUrl'] = $pluginHavingUpdate['repositoryChangelogUrl'];
+            if (empty($pluginHavingUpdate)) {
+                continue;
+            }
 
-            if (!empty($plugin['isTheme']) == $themesOnly) {
+            $plugin = $this->getPluginInfo($pluginHavingUpdate['name']);
+
+            if (!empty($plugin)) {
+                $plugin['repositoryChangelogUrl'] = $pluginHavingUpdate['repositoryChangelogUrl'];
                 $pluginDetails[] = $plugin;
             }
         }
@@ -147,8 +188,7 @@ class Client
         $query = http_build_query($params);
         $cacheId = $this->getCacheKey($action, $query);
 
-        $cache  = $this->buildCache();
-        $result = $cache->fetch($cacheId);
+        $result = $this->cache->fetch($cacheId);
 
         if ($result !== false) {
             return $result;
@@ -160,19 +200,14 @@ class Client
             throw new Exception($e->getMessage(), $e->getCode());
         }
 
-        $cache->save($cacheId, $result, self::CACHE_TIMEOUT_IN_SECONDS);
+        $this->cache->save($cacheId, $result, self::CACHE_TIMEOUT_IN_SECONDS);
 
         return $result;
     }
 
     public function clearAllCacheEntries()
     {
-        $this->buildCache()->flushAll();
-    }
-
-    private function buildCache()
-    {
-        return Cache::getLazyCache();
+        $this->cache->flushAll();
     }
 
     private function getCacheKey($action, $query)

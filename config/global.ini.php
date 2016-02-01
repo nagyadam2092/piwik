@@ -133,9 +133,6 @@ enabled = 0
 disable_merged_assets = 0
 
 [Marketplace]
-; By setting this option to 0, you can disable the Piwik marketplace. This is useful to prevent giving the Super user
-; the access to disk and install custom PHP code (Piwik plugins).
-enabled = 1
 
 ; Can be used to restrict the list of shown plugins in the Marketplace to specific github organizations. By default it
 ; will show all plugins ("0"). To whistlist only specific organizations list them comma separated, eg "piwik,piwikpro".
@@ -809,6 +806,7 @@ Plugins[] = DevicePlugins
 Plugins[] = Heartbeat
 Plugins[] = Intl
 Plugins[] = PiwikPro
+Plugins[] = Marketplace
 
 [PluginsInstalled]
 PluginsInstalled[] = Diagnostics

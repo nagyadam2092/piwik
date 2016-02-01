@@ -9,10 +9,10 @@
 namespace Piwik\Plugins\Marketplace;
 
 use Exception;
-use Piwik\Option;
 use Piwik\Piwik;
 use Piwik\Plugins\Marketplace\Api\Client;
 use Piwik\Plugins\Marketplace\Api\Service;
+use Piwik\Plugins\Marketplace\Plugins\Expired;
 
 /**
  * API for plugin Marketplace
@@ -31,10 +31,16 @@ class API extends \Piwik\Plugin\API
      */
     private $marketplaceService;
 
-    public function __construct(Service $service, Client $client)
+    /**
+     * @var Expired
+     */
+    private $expired;
+
+    public function __construct(Service $service, Client $client, Expired $expired)
     {
-        $this->marketplaceClient  = $client;
         $this->marketplaceService = $service;
+        $this->marketplaceClient  = $client;
+        $this->expired = $expired;
     }
 
     /**
@@ -66,6 +72,7 @@ class API extends \Piwik\Plugin\API
 
         $licenseKey = trim($licenseKey);
 
+        // we are currently using the Marketplace service directly to 1) change LicenseKey and 2) not use any cache
         $this->marketplaceService->authenticate($licenseKey);
 
         try {
@@ -78,8 +85,12 @@ class API extends \Piwik\Plugin\API
             $consumer = false;
         }
 
-        if (empty($consumer['name'])) {
-            throw new Exception('Entered license key is not valid');
+        if (!empty($consumer['isExpired'])) {
+            throw new Exception(Piwik::translate('Marketplace_ExceptionLinceseKeyIsExpired'));
+        }
+
+        if (empty($consumer['isValid'])) {
+            throw new Exception(Piwik::translate('Marketplace_ExceptionLinceseKeyIsNotValid'));
         }
 
         $this->setLicenseKey($licenseKey);
@@ -93,6 +104,7 @@ class API extends \Piwik\Plugin\API
         $key->set($licenseKey);
 
         $this->marketplaceClient->clearAllCacheEntries();
+        $this->expired->clearCache();
     }
 
 }

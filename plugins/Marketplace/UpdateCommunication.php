@@ -175,12 +175,9 @@ class UpdateCommunication
     protected function getPluginsHavingUpdate()
     {
         $marketplace         = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins');
-        $pluginsHavingUpdate = $marketplace->getPluginsHavingUpdate($themesOnly = false);
-        $themesHavingUpdate  = $marketplace->getPluginsHavingUpdate($themesOnly = true);
+        $pluginsHavingUpdate = $marketplace->getPluginsHavingUpdate();
 
-        $plugins = array_merge($pluginsHavingUpdate, $themesHavingUpdate);
-
-        return $plugins;
+        return $pluginsHavingUpdate;
     }
 
     protected function buildNotificationMessage($pluginsToBeNotified, $hasThemeUpdate, $hasPluginUpdate)

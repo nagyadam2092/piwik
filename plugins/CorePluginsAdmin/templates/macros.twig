@@ -1,5 +1,5 @@
 
-{% macro tablePluginUpdates(pluginsHavingUpdate, updateNonce, installNonce, isMultiServerEnvironment) %}
+{% macro tablePluginUpdates(pluginsHavingUpdate, updateNonce, isMultiServerEnvironment) %}
     {% import '@Marketplace/macros.twig' as marketplaceMacro %}
 
     <div class='entityContainer'>
@@ -41,7 +41,7 @@
                     </td>
                     <td class="togl action-links">
                         {% if isMultiServerEnvironment %}
-                            <a onclick="$(this).css('display', 'none')" href="{{ linkTo({'action':'download', 'module': 'Marketplace', 'pluginName': plugin.name, 'nonce': installNonce}) }}">{{ 'General_Download'|translate }}</a>
+                            <a onclick="$(this).css('display', 'none')" href="{{ linkTo({'action':'download', 'module': 'Marketplace', 'pluginName': plugin.name, 'nonce': (plugin.name|nonce)}) }}">{{ 'General_Download'|translate }}</a>
                         {% elseif 0 == plugin.missingRequirements|length %}
                             <a href="{{ linkTo({'action':'updatePlugin', 'pluginName': plugin.name, 'nonce': updateNonce}) }}">{{ 'CoreUpdater_UpdateTitle'|translate }}</a>
                         {% else %}
@@ -55,6 +55,16 @@
     </div>
 
 {% endmacro %}
+
+{% macro pluginActivateDeactivateAction(name, isActivated, missingRequirements, deactivateNonce, activateNonce) -%}
+    {%- if isActivated -%}
+        <a href='index.php?module=CorePluginsAdmin&action=deactivate&pluginName={{ name }}&nonce={{ deactivateNonce }}'>{{ 'CorePluginsAdmin_Deactivate'|translate }}</a>
+    {%- elseif missingRequirements %}
+        -
+    {% else -%}
+        <a href='index.php?module=CorePluginsAdmin&action=activate&pluginName={{ name }}&nonce={{  activateNonce }}'>{{ 'CorePluginsAdmin_Activate'|translate }}</a>
+    {%- endif -%}
+{%- endmacro %}
 
 {% macro pluginsFilter(isTheme, isMarketplaceEnabled) %}
 
@@ -237,13 +247,7 @@
                         {% if plugin.invalid is defined or plugin.alwaysActivated %}
                             -
                         {% else %}
-                            {% if plugin.activated %}
-                                <a href='index.php?module=CorePluginsAdmin&action=deactivate&pluginName={{ name }}&nonce={{ deactivateNonce }}'>{{ 'CorePluginsAdmin_Deactivate'|translate }}</a>
-                            {% elseif plugin.missingRequirements %}
-                                -
-                            {% else %}
-                                <a href='index.php?module=CorePluginsAdmin&action=activate&pluginName={{ name }}&nonce={{  activateNonce }}'>{{ 'CorePluginsAdmin_Activate'|translate }}</a>
-                            {% endif %}
+                            {{ _self.pluginActivateDeactivateAction(name, plugin.activated, plugin.missingRequirements, deactivateNonce, activateNonce) }}
                         {% endif %}
 
                         {%- endif %}
@@ -254,6 +258,19 @@
         {% endfor %}
         </tbody>
     </table>
+
+    <div class="footer-message">
+        {% set pluginsAlwaysActivated %}
+            {% for name,plugin in pluginsInfo %}
+                {% if plugin.alwaysActivated is defined and plugin.alwaysActivated %}
+                    {{ name }}{% if not loop.last %}, {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endset %}
+        {{ 'CorePluginsAdmin_AlwaysActivatedPluginsList'|translate(pluginsAlwaysActivated) }}
+    </div>
 </div>
+
+
 
 {% endmacro %}

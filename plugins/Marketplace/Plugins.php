@@ -12,6 +12,8 @@ use Piwik\Date;
 use Piwik\PiwikPro\Advertising;
 use Piwik\Plugin\Dependency as PluginDependency;
 use Piwik\Plugin;
+use Piwik\Plugins\Marketplace\Input\PurchaseType;
+use Piwik\Plugins\Marketplace\Input\Sort;
 
 /**
  *
@@ -32,12 +34,18 @@ class Plugins
      * @var Advertising
      */
     private $advertising;
-    
+
+    /**
+     * @var Plugin\Manager
+     */
+    private $pluginManager;
+
     public function __construct(Api\Client $marketplaceClient, Consumer $consumer, Advertising $advertising)
     {
         $this->marketplaceClient = $marketplaceClient;
         $this->consumer = $consumer;
         $this->advertising = $advertising;
+        $this->pluginManager = Plugin\Manager::getInstance();
     }
 
     public function getPluginInfo($pluginName)
@@ -51,9 +59,11 @@ class Plugins
     public function getAvailablePluginNames($themesOnly)
     {
         if ($themesOnly) {
-            $plugins = $this->marketplaceClient->searchForThemes('', '', '', '');
+            // we do not use getAllThemes() or getAllPlugins() since those methods would apply a whitelist
+            // github organization filter and here we actually want to get all plugin names.
+            $plugins = $this->marketplaceClient->searchForThemes('', '', SORT::DEFAULT_SORT, PurchaseType::TYPE_ALL);
         } else {
-            $plugins = $this->marketplaceClient->searchForPlugins('', '', '', '');
+            $plugins = $this->marketplaceClient->searchForPlugins('', '', SORT::DEFAULT_SORT, PurchaseType::TYPE_ALL);
         }
 
         $names = array();
@@ -92,7 +102,27 @@ class Plugins
             }
         }
 
-        return $plugins;
+        return array_values($plugins);
+    }
+
+    public function getAllPaidPlugins()
+    {
+        return $this->searchPlugins($query = '', SORT::DEFAULT_SORT, $themes = false, PurchaseType::TYPE_PAID);
+    }
+
+    public function getAllFreePlugins()
+    {
+        return $this->searchPlugins($query = '', SORT::DEFAULT_SORT, $themes = false, PurchaseType::TYPE_FREE);
+    }
+
+    public function getAllThemes()
+    {
+        return $this->searchPlugins($query = '', SORT::DEFAULT_SORT, $themes = true, PurchaseType::TYPE_ALL);
+    }
+
+    public function getAllPlugins()
+    {
+        return $this->searchPlugins($query = '', SORT::DEFAULT_SORT, $themes = false, PurchaseType::TYPE_ALL);
     }
 
     private function isPluginDevelopedByDistributors($plugin, $whitelistedDistributors)
@@ -114,7 +144,7 @@ class Plugins
             return;
         }
 
-        $pluginsHavingUpdate = $this->getPluginsHavingUpdate($plugin['isTheme']);
+        $pluginsHavingUpdate = $this->getPluginsHavingUpdate();
 
         foreach ($pluginsHavingUpdate as $pluginHavingUpdate) {
             if ($plugin['name'] == $pluginHavingUpdate['name']) {
@@ -134,14 +164,13 @@ class Plugins
      * @param bool $themesOnly
      * @return array
      */
-    public function getPluginsHavingUpdate($themesOnly)
+    public function getPluginsHavingUpdate()
     {
-        $pluginManager = \Piwik\Plugin\Manager::getInstance();
-        $pluginManager->loadAllPluginsAndGetTheirInfo();
-        $loadedPlugins = $pluginManager->getLoadedPlugins();
+        $this->pluginManager->loadAllPluginsAndGetTheirInfo();
+        $loadedPlugins = $this->pluginManager->getLoadedPlugins();
 
         try {
-            $pluginsHavingUpdate = $this->marketplaceClient->getInfoOfPluginsHavingUpdate($loadedPlugins, $themesOnly);
+            $pluginsHavingUpdate = $this->marketplaceClient->getInfoOfPluginsHavingUpdate($loadedPlugins);
         } catch (\Exception $e) {
             $pluginsHavingUpdate = array();
         }
@@ -152,7 +181,7 @@ class Plugins
                     && $loadedPlugin->getPluginName() == $updatePlugin['name']
                 ) {
                     $updatePlugin['currentVersion'] = $loadedPlugin->getVersion();
-                    $updatePlugin['isActivated'] = $pluginManager->isPluginActivated($updatePlugin['name']);
+                    $updatePlugin['isActivated'] = $this->pluginManager->isPluginActivated($updatePlugin['name']);
                     $pluginsHavingUpdate[$key] = $this->addMissingRequirements($updatePlugin);
                     break;
                 }
@@ -171,7 +200,13 @@ class Plugins
 
     private function enrichPluginInformation($plugin)
     {
-        $plugin['isInstalled']  = Plugin\Manager::getInstance()->isPluginLoaded($plugin['name']);
+        if (empty($plugin)) {
+            return $plugin;
+        }
+
+        $plugin['isInstalled']  = $this->pluginManager->isPluginLoaded($plugin['name']);
+        $plugin['isActivated']  = $this->pluginManager->isPluginActivated($plugin['name']);
+        $plugin['isInvalid']    = $this->pluginManager->isPluginThirdPartyAndBogus($plugin['name']);
         $plugin['canBeUpdated'] = $plugin['isInstalled'] && $this->hasPluginUpdate($plugin);
         $plugin['lastUpdated'] = $this->toShortDate($plugin['lastUpdated']);
 

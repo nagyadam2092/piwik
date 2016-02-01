@@ -41,17 +41,12 @@ class PluginInstaller
     {
         $this->pluginName = $pluginName;
 
-        $tmpPluginPath = StaticContainer::get('path.tmp') . '/latest/plugins/';
-
-        $tmpPluginFolder = Common::generateUniqId();
-
-        $tmpPluginZip = $tmpPluginPath . $tmpPluginFolder . '.zip';
-        $tmpPluginFolder = $tmpPluginPath . $tmpPluginFolder;
-
         try {
             $this->makeSureFoldersAreWritable();
             $this->makeSurePluginNameIsValid();
-            $this->downloadPluginFromMarketplace($tmpPluginZip);
+
+            $tmpPluginZip = $this->downloadPluginFromMarketplace();
+            $tmpPluginFolder = dirname($tmpPluginZip) . '/';
             $this->extractPluginFiles($tmpPluginZip, $tmpPluginFolder);
             $this->makeSurePluginJsonExists($tmpPluginFolder);
             $metadata = $this->getPluginMetadataIfValid($tmpPluginFolder);
@@ -62,8 +57,12 @@ class PluginInstaller
 
         } catch (\Exception $e) {
 
-            $this->removeFileIfExists($tmpPluginZip);
-            $this->removeFolderIfExists($tmpPluginFolder);
+            if (!empty($tmpPluginZip)) {
+                Filesystem::deleteFileIfExists($tmpPluginZip);
+            }
+            if (!empty($tmpPluginFolder)) {
+                $this->removeFolderIfExists($tmpPluginFolder);
+            }
 
             throw $e;
         }
@@ -114,12 +113,14 @@ class PluginInstaller
         ));
     }
 
-    private function downloadPluginFromMarketplace($pluginZipTargetFile)
+    /**
+     * @return false|string   false on failed download, or a path to the downloaded zip file
+     * @throws PluginInstallerException
+     */
+    private function downloadPluginFromMarketplace()
     {
-        $this->removeFileIfExists($pluginZipTargetFile);
-
         try {
-            $this->marketplaceClient->download($this->pluginName, $pluginZipTargetFile);
+            return $this->marketplaceClient->download($this->pluginName);
         } catch (\Exception $e) {
 
             try {
@@ -290,9 +291,7 @@ class PluginInstaller
      */
     private function removeFileIfExists($targetTmpFile)
     {
-        if (file_exists($targetTmpFile)) {
-            unlink($targetTmpFile);
-        }
+        Filesystem::deleteFileIfExists($targetTmpFile);
     }
 
     /**

@@ -93,6 +93,7 @@ class Twig
         $this->addFilter_prettyDate();
         $this->addFilter_safeDecodeRaw();
         $this->addFilter_number();
+        $this->addFilter_nonce();
         $this->twig->addFilter(new Twig_SimpleFilter('implode', 'implode'));
         $this->twig->addFilter(new Twig_SimpleFilter('ucwords', 'ucwords'));
         $this->twig->addFilter(new Twig_SimpleFilter('lcfirst', 'lcfirst'));
@@ -374,6 +375,12 @@ class Twig
             return NumberFormatter::getInstance()->format($string, $minFractionDigits, $maxFractionDigits);
         });
         $this->twig->addFilter($formatter);
+    }
+
+    protected function addFilter_nonce()
+    {
+        $nonce = new Twig_SimpleFilter('nonce', array('Piwik\\Nonce', 'getNonce'));
+        $this->twig->addFilter($nonce);
     }
 
     protected function addFilter_truncate()

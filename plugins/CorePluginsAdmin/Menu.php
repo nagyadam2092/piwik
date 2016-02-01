@@ -34,11 +34,10 @@ class Menu extends \Piwik\Plugin\Menu
         $pluginsUpdateMessage = '';
 
         if ($hasSuperUserAcess && $isMarketplaceEnabled) {
-            $pluginsHavingUpdate = $this->marketplacePlugins->getPluginsHavingUpdate($themesOnly = false);
-            $themesHavingUpdate  = $this->marketplacePlugins->getPluginsHavingUpdate($themesOnly = true);
+            $pluginsHavingUpdate = $this->marketplacePlugins->getPluginsHavingUpdate();
 
             if (!empty($pluginsHavingUpdate)) {
-                $pluginsUpdateMessage = sprintf(' (%d)', count($pluginsHavingUpdate) + count($themesHavingUpdate));
+                $pluginsUpdateMessage = sprintf(' (%d)', count($pluginsHavingUpdate));
             }
         }
 

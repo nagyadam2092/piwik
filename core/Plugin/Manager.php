@@ -644,7 +644,12 @@ class Manager
         || $name == self::DEFAULT_THEME;
     }
 
-    protected function isPluginThirdPartyAndBogus($pluginName)
+    /**
+     * @param $pluginName
+     * @return bool
+     * @ignore
+     */
+    public function isPluginThirdPartyAndBogus($pluginName)
     {
         if ($this->isPluginBundledWithCore($pluginName)) {
             return false;

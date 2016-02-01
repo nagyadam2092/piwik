@@ -15,9 +15,8 @@ use Piwik\Tests\Framework\Fixture;
 use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
 
 /**
- * Class Plugins_CorePluginsAdmin_UpdateCommunicationTest
- *
  * @group Plugins
+ * @group Marketplace
  */
 class UpdateCommunicationTest extends IntegrationTestCase
 {
@@ -160,7 +159,7 @@ Installation_HappyAnalysing";
      */
     private function getCommunicationMock($pluginsHavingUpdate)
     {
-        $mock = $this->getMock('\Piwik\Plugins\CorePluginsAdmin\UpdateCommunication', array('getPluginsHavingUpdate', 'sendEmailNotification'));
+        $mock = $this->getMock('\Piwik\Plugins\Marketplace\UpdateCommunication', array('getPluginsHavingUpdate', 'sendEmailNotification'));
 
         $mock->expects($this->any())
              ->method('getPluginsHavingUpdate')

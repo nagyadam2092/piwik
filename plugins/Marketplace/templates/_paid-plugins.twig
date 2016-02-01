@@ -6,17 +6,20 @@
            value="{{ 'CoreUpdater_UpdateTitle'|translate|e('html_attr') }}">
 {% endset %}
 
+{% set isAuthenticatedCustomer = (consumer is not empty and consumer.isValid) %}
+
 <div class="marketplace-max-width">
-    <p>
-        {% if consumer is defined and consumer and consumer.name %}
+    <p class="marketplace-paid-intro">
+        {% if isAuthenticatedCustomer %}
             {% if isSuperUser %}
+
                 {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
                     {{ 'Marketplace_PaidPluginsWithLicenseKeyAndExpireDayIntro'|translate(distributorLink, consumer.expireDateLong, distributorLink)|raw }}
                 {% else %}
                     {{ 'Marketplace_PaidPluginsWithLicenseKeyAndNoExpireDayIntro'|translate(distributorLink)|raw }}
                 {% endif %}
 
-                {% if consumer.showWarningLicenseExpiresSoon %}
+                {% if consumer.isExpiredSoon %}
                     <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
                 {% endif %}
 
@@ -26,10 +29,13 @@
                 <input id="remove_license_key" class="btn" type="button" value="{{ 'Marketplace_RemoveLicenseKey'|translate|e('html_attr') }}">
 
             {% else %}
-                {{ 'CorePluginsAdmin_NotAllowedToBrowseMarketplacePlugins'|translate }}
+                {{ 'Marketplace_NotAllowedToBrowseMarketplacePlugins'|translate }}
             {% endif %}
 
         {% else %}
+            {% if isSuperUser and consumer is not empty and consumer.isExpired %}
+                <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyIsExpired'|translate(distributorLink)|raw }}</div>
+            {% endif %}
 
             {% set upgradePiwikProLink = 'Marketplace'|piwikProOnPremisesPromoUrl %}
             {% set piwikProLink = 'https://piwik.pro'|piwikProCampaignParameters('Marketplace', 'Marketplace', 'User') %}
@@ -48,3 +54,25 @@
         {% endif %}
     </p>
 </div>
+
+<hr/>
+
+{% include '@Marketplace/plugin-list.twig' %}
+
+{% if isAuthenticatedCustomer and not isMultiServerEnvironment and isPluginsAdminEnabled and paidPluginsToInstallAtOnce|length %}
+    <h3>{{ 'Marketplace_InstallAllPaidPlugins'|translate }}</h3>
+    <p>
+    This will install and activate the following plugins:
+    </p>
+    <ul>
+        {% for pluginName in paidPluginsToInstallAtOnce %}
+            <li>{{ pluginName }}</li>
+        {% endfor %}
+    </ul>
+
+    <p>
+        <a href="{{ linkTo({'action': 'installAllPaidPlugins', 'nonce': installNonce}) }}" class="btn">
+            {{ 'Marketplace_InstallAllPaidPluginsAction'|translate(paidPluginsToInstallAtOnce|length) }}
+        </a>
+    </p>
+{% endif %}

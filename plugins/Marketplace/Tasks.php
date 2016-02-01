@@ -23,10 +23,7 @@ class Tasks extends \Piwik\Plugin\Tasks
     public function schedule()
     {
         $this->daily('clearAllCacheEntries', null, self::LOWEST_PRIORITY);
-
-        if (Marketplace::isMarketplaceEnabled()) {
-            $this->daily('sendNotificationIfUpdatesAvailable', null, self::LOWEST_PRIORITY);
-        }
+        $this->daily('sendNotificationIfUpdatesAvailable', null, self::LOWEST_PRIORITY);
     }
 
     public function clearAllCacheEntries()

@@ -1,5 +1,5 @@
 {% extends mode is defined and mode == 'user' ? "user.twig" : "admin.twig" %}
-{% import '@Marketplace/macros.twig' as pluginsMacro %}
+{% import '@Marketplace/macros.twig' as marketplaceMacro %}
 
 {% set title %}{{ 'Marketplace_Marketplace'|translate }}{% endset %}
 
@@ -27,7 +27,7 @@
             {% endset %}
 
             {% set paidPluginsLink %}
-                {% if paidPlugins|length %}
+                {% if paidPlugins|length or showPaid %}
                     <li {% if showPlugins and showPaid %}class="active"{% endif %}>
                         <a href="{{ linkTo({'show': 'plugins', 'type': 'paid'}) }}">{{ 'Marketplace_PaidPlugins'|translate }}</a>
                     </li>
@@ -42,7 +42,7 @@
                 {% endif %}
             {% endset %}
 
-            {% if hasAccessToPaidPlugins %}
+            {% if consumer is not empty %}
                 {{ paidPluginsLink }}
                 {{ freePluginsLink }}
                 {{ freeThemesLink }}
@@ -54,18 +54,10 @@
         </ul>
 
         {% if showPaid %}
-            {% include '@Marketplace/_overview_header_paid.twig' %}
+            {% include '@Marketplace/_paid-plugins.twig' %}
         {% else %}
-            {% include '@Marketplace/_overview_header_free.twig' %}
+            {% include '@Marketplace/_free-plugins.twig' %}
         {% endif %}
-
-        <hr/>
-
-        {% include '@Marketplace/plugin-list.twig' %}
-
-        <div class="footer-message">
-            {{ 'CorePluginsAdmin_DevelopersLearnHowToDevelopPlugins'|translate('<a href="?module=Proxy&action=redirect&url=http://developer.piwik.org/plugins" target="_blank">', '</a>')|raw }}
-        </div>
 
     </div>
 
