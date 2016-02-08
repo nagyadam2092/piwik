@@ -16,7 +16,7 @@
 
                 <p>{{ 'CorePluginsAdmin_StepThemeSuccessfullyInstalled'|translate(plugin.name, plugin.latestVersion) }}</p>
 
-                <p><strong><a href="{{ linkTo({'action': 'activate', 'pluginName': plugin.name, 'nonce': nonce}) }}">{{ 'CorePluginsAdmin_ActionActivateTheme'|translate }}</a></strong>
+                <p><strong><a href="{{ linkTo({'action': 'activate', 'pluginName': plugin.name, 'nonce': nonce, 'redirectTo': 'marketplace'}) }}">{{ 'CorePluginsAdmin_ActionActivateTheme'|translate }}</a></strong>
 
                     |
                     <a class="btn" href="{{ linkTo({'module': 'Marketplace', 'action': 'overview', 'show': 'themes'}) }}">{{ 'CorePluginsAdmin_BackToExtendPiwik'|translate }}</a></p>
@@ -29,7 +29,7 @@
 
                 <p>{{ 'CorePluginsAdmin_StepPluginSuccessfullyInstalled'|translate(plugin.name, plugin.latestVersion) }}</p>
 
-                <p><strong><a class="btn" href="{{ linkTo({'action': 'activate', 'pluginName': plugin.name, 'nonce': nonce}) }}">{{ 'CorePluginsAdmin_ActionActivatePlugin'|translate }}</a></strong>
+                <p><strong><a class="btn" href="{{ linkTo({'action': 'activate', 'pluginName': plugin.name, 'nonce': nonce, 'redirectTo': 'marketplace'}) }}">{{ 'CorePluginsAdmin_ActionActivatePlugin'|translate }}</a></strong>
 
                     |
                     <a href="{{ linkTo({'module': 'Marketplace', 'action': 'overview', 'show': ''}) }}">{{ 'CorePluginsAdmin_BackToExtendPiwik'|translate }}</a></p>

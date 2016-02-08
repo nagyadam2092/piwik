@@ -377,7 +377,22 @@ class Controller extends Plugin\ControllerAdmin
             $notification->context = Notification::CONTEXT_SUCCESS;
             Notification\Manager::notify('CorePluginsAdmin_PluginActivated', $notification);
 
-            $this->redirectAfterModification($redirectAfter);
+            $redirectTo = Common::getRequestVar('redirectTo', '', 'string');
+            if (!empty($redirectTo) && $redirectTo === 'marketplace') {
+                $this->redirectToIndex('Marketplace', 'overview');
+            } elseif (!empty($redirectTo) && $redirectTo === 'referrer') {
+                $this->redirectAfterModification($redirectAfter);
+            } else {
+                $plugin = $this->pluginManager->loadPlugin($pluginName);
+
+                $actionToRedirect = 'plugins';
+                if ($plugin->isTheme()) {
+                    $actionToRedirect = 'themes';
+                }
+
+                $this->redirectToIndex('CorePluginsAdmin', $actionToRedirect);
+            }
+
         }
     }
 
