@@ -59,7 +59,7 @@
 
 {% include '@Marketplace/plugin-list.twig' %}
 
-{% if isAuthenticatedCustomer and not isMultiServerEnvironment and isPluginsAdminEnabled and paidPluginsToInstallAtOnce|length %}
+{% if isAuthenticatedCustomer and isAutoUpdatePossible and isPluginsAdminEnabled and paidPluginsToInstallAtOnce|length %}
     <h3>{{ 'Marketplace_InstallAllPaidPlugins'|translate }}</h3>
     <p>
     This will install and activate the following plugins:

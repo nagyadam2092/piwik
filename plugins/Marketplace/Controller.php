@@ -25,6 +25,7 @@ use Piwik\Plugins\Marketplace\Input\PluginName;
 use Piwik\Plugins\Marketplace\Input\PurchaseType;
 use Piwik\Plugins\Marketplace\Input\Sort;
 use Piwik\ProxyHttp;
+use Piwik\SettingsPiwik;
 use Piwik\Url;
 use Piwik\View;
 use Exception;
@@ -138,6 +139,8 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $view->installNonce = Nonce::getNonce(PluginsController::INSTALL_NONCE);
         $view->updateNonce  = Nonce::getNonce(PluginsController::UPDATE_NONCE);
         $view->activeTab    = $activeTab;
+        $view->isAutoUpdatePossible = SettingsPiwik::isAutoUpdatePossible();
+        $view->isAutoUpdateEnabled = SettingsPiwik::isAutoUpdateEnabled();
 
         return $view->render();
     }
@@ -216,10 +219,12 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         }
 
         $paidPluginsToInstallAtOnce = array();
-        foreach ($paidPlugins as $paidPlugin) {
-            if ($this->canPluginBeInstalled($paidPlugin)
-                || !$this->getPluginManager()->isPluginActivated($paidPlugin['name'])) {
-                $paidPluginsToInstallAtOnce[] = $paidPlugin['name'];
+        if (SettingsPiwik::isAutoUpdatePossible()) {
+            foreach ($paidPlugins as $paidPlugin) {
+                if ($this->canPluginBeInstalled($paidPlugin)
+                    || !$this->getPluginManager()->isPluginActivated($paidPlugin['name'])) {
+                    $paidPluginsToInstallAtOnce[] = $paidPlugin['name'];
+                }
             }
         }
 
@@ -245,6 +250,8 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $view->activateNonce = Nonce::getNonce(PluginsController::ACTIVATE_NONCE);
         $view->isSuperUser = Piwik::hasUserSuperUserAccess();
         $view->isPluginsAdminEnabled = CorePluginsAdmin::isPluginsAdminEnabled();
+        $view->isAutoUpdatePossible = SettingsPiwik::isAutoUpdatePossible();
+        $view->isAutoUpdateEnabled = SettingsPiwik::isAutoUpdateEnabled();
 
         return $view->render();
     }

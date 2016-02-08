@@ -17,7 +17,7 @@ use Piwik\Plugin;
 use Piwik\Plugins\Marketplace\Api\Service;
 use Piwik\SettingsServer;
 use Piwik\Version;
-use Exception;
+use Exception as PhpException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -159,7 +159,7 @@ class Client
 
             try {
                 $plugin = $this->getPluginInfo($pluginHavingUpdate['name']);
-            } catch (Exception $e) {
+            } catch (PhpException $e) {
                 $this->logger->error($e->getMessage());
                 $plugin = null;
             }

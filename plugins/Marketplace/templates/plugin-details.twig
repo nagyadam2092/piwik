@@ -29,7 +29,7 @@
                            href="{{ plugin.homepage|e('html_attr') }}"
                         >{{ 'General_MoreDetails'|translate }}</a>
                     {% elseif isSuperUser %}
-                        {% if isMultiServerEnvironment %}
+                        {% if not isAutoUpdatePossible %}
                             <a onclick="$(this).css('display', 'none')" href="{{ linkTo({'action': 'download', 'pluginName': plugin.name, 'nonce': (plugin.name|nonce)}) }}"
                                class="download">{{ 'General_Download'|translate }}</a>
                         {% elseif plugin.canBeUpdated and 0 == plugin.missingRequirements|length %}
@@ -67,10 +67,14 @@
                         </ul>
 
                         <div id="tabs-description">
-                            {{ marketplaceMacro.missingRequirementsPleaseUpdateNotice(plugin) }}
+                            {% if isSuperUser %}
+                                {{ marketplaceMacro.missingRequirementsPleaseUpdateNotice(plugin) }}
 
-                            {% if isMultiServerEnvironment %}
-                                <div class="alert alert-warning">{{ 'Marketplace_MultiServerEnvironmentWarning'|translate }}</div>
+                                {% if isMultiServerEnvironment %}
+                                    <div class="alert alert-warning">{{ 'Marketplace_MultiServerEnvironmentWarning'|translate }}</div>
+                                {% elseif not isAutoUpdateEnabled %}
+                                    <div class="alert alert-warning">{{ 'Marketplace_AutoUpdateDisabledWarning'|translate("'[General]enable_auto_updates=1'", "'config/config.ini.php'") }}</div>
+                                {% endif %}
                             {% endif %}
 
                             {{ latestVersion.readmeHtml.description|raw }}
