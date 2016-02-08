@@ -180,7 +180,22 @@ describe("Marketplace", function () {
 
 
     // TODO
-    // mock the plugins results that are shown
     // add test for updates (if possible)
+    // add test for expire license
+
+    it('should show a success message when valid license key entered', function (done) {
+        setEnvironment(mode, noLicense);
+
+        captureWithNotification(done, mode + '_valid_license_key_entered', function (page) {
+            testEnvironment.redirectToMarketplaceExpiredLicense = 1;
+            testEnvironment.save();
+            page.load('module=SecurityInfo');
+            page.sendKeys('#license_key', 'valid');
+            page.callMethod(function () {
+                setEnvironment(mode, validLicense);
+            });
+            page.click('#submit_license_key');
+        });
+    });
 
 });

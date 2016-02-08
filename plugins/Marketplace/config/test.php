@@ -71,5 +71,15 @@ return array(
         });
 
         return $service;
-    })
+    }),
+    'observers.global' => DI\add(array(
+
+        array('Request.getRenamedModuleAndAction', function (&$module, &$action) {
+            if (\Piwik\Container\StaticContainer::get('test.vars.redirectToMarketplaceExpiredLicense')) {
+                $module = 'Marketplace';
+                $action = 'expiredLicense';
+            }
+        }),
+
+    )),
 );
