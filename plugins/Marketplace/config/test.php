@@ -35,7 +35,7 @@ return array(
 
         return $consumer;
     },
-    'Piwik\Plugins\Marketplace\Api\Service' => function (ContainerInterface $c, $previous) {
+    'Piwik\Plugins\Marketplace\Api\Service' => DI\decorate(function ($previous, ContainerInterface $c) {
         if (!$c->get('test.vars.mockMarketplaceApiService')) {
             return $previous;
         }
@@ -71,5 +71,5 @@ return array(
         });
 
         return $service;
-    }
+    })
 );
