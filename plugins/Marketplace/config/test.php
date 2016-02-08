@@ -43,6 +43,12 @@ return array(
 
         // for ui tests
         $service = new MockService();
+
+        $key = new LicenseKey();
+        $accessToken = $key->get();
+
+        $service->authenticate($accessToken);
+
         $service->setOnDownloadCallback(function ($action, $params) use ($service) {
             if ($action === 'consumer' && $service->getAccessToken() === 'valid') {
                 return $service->getFixtureContent('v2.0_consumer-access_token-valid_never_expires_and_two_custom_plugins.json');
