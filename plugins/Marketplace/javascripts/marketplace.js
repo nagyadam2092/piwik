@@ -13,6 +13,44 @@ $(document).ready(function () {
         watch: 'window'
     });
 
+    function syncMaxHeight (selector) {
+
+        if (!selector) {
+            return;
+        }
+
+        var $nodes = $(selector);
+
+        if (!$nodes) {
+            return;
+        }
+
+        var max = {};
+        $nodes.each(function (index, node) {
+            var $node = $(node);
+            var top   = $node.position().top;
+
+            var height = $node.height();
+
+            if (!max[top]) {
+                max[top] = height;
+            } else if (max[top] < height) {
+                max[top] = height;
+            } else {
+                $node.height(max[top] + 'px');
+            }
+        });
+
+        $nodes.each(function (index, node) {
+            var $node = $(node);
+            var top   = $node.position().top;
+
+            $node.height(max[top] + 'px');
+        });
+    }
+
+    syncMaxHeight('.marketplace .plugin .panel-footer');
+
     $('a.plugin-details[data-pluginName]').on('click', function (event) {
         event.preventDefault();
 
