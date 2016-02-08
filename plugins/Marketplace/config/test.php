@@ -54,9 +54,13 @@ return array(
                 return $service->getFixtureContent('v2.0_consumer-access_token-valid_never_expires_and_two_custom_plugins.json');
             } elseif ($action === 'plugins' && empty($params['purchase_type']) && empty($params['query'])) {
                 return $service->getFixtureContent('v2.0_plugins.json');
-            } elseif ($action === 'plugins' && $params['purchase_type'] === PurchaseType::TYPE_PAID && empty($params['query'])) {
+            } elseif ($action === 'plugins' && !$service->hasAccessToken() && $params['purchase_type'] === PurchaseType::TYPE_PAID && empty($params['query'])) {
+                return $service->getFixtureContent('v2.0_plugins-purchase_type-paid-access_token-not_existing_token.json');
+            } elseif ($action === 'plugins' && !$service->hasAccessToken() && $params['purchase_type'] === PurchaseType::TYPE_FREE && empty($params['query'])) {
+                return $service->getFixtureContent('v2.0_plugins-purchase_type-free-access_token-not_existing_token.json');
+            } elseif ($action === 'plugins' && $service->hasAccessToken() && $params['purchase_type'] === PurchaseType::TYPE_PAID && empty($params['query'])) {
                 return $service->getFixtureContent('v2.0_plugins-purchase_type-paid-access_token-valid_not_expired_and_one_custom_plugin.json');
-            } elseif ($action === 'plugins' && $params['purchase_type'] === PurchaseType::TYPE_FREE && empty($params['query'])) {
+            } elseif ($action === 'plugins' && $service->hasAccessToken() && $params['purchase_type'] === PurchaseType::TYPE_FREE && empty($params['query'])) {
                 return $service->getFixtureContent('v2.0_plugins-purchase_type-free-access_token-valid_not_expired_and_one_custom_plugin.json');
             } elseif ($action === 'themes' && empty($params['purchase_type']) && empty($params['query'])) {
                 return $service->getFixtureContent('v2.0_themes.json');
