@@ -206,7 +206,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
             $consumer['expireDateLong'] = $expireDate->getLocalized(Date::DATE_FORMAT_LONG);
         }
 
-        $paidPluginsToInstallAtOnce = [];
+        $paidPluginsToInstallAtOnce = array();
         foreach ($paidPlugins as $paidPlugin) {
             if ($this->canPluginBeInstalled($paidPlugin)
                 || !$this->getPluginManager()->isPluginActivated($paidPlugin['name'])) {

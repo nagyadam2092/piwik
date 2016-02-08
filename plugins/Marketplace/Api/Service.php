@@ -126,11 +126,10 @@ class Service
      */
     public function fetch($action, $params)
     {
-        $query = http_build_query($params);
-
         $endpoint = sprintf('%s/api/%s/', $this->domain, $this->version);
 
-        $url = sprintf('%s%s?%s', $endpoint, $action, $query);
+        $query = http_build_query($params);
+        $url   = sprintf('%s%s?%s', $endpoint, $action, $query);
 
         $response = $this->download($url);
 
