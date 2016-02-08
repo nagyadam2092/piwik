@@ -101,6 +101,7 @@ class ManagerTest extends IntegrationTestCase
             array(true, 'pluginNameTest'),
             array(true, 'PluginNameTest'),
             array(true, 'PluginNameTest92323232eerwrwere938'),
+            array(true, 'a_ererer'),
             array(true, 'a_'),
             array(false, ''),
             array(false, '0'),
@@ -108,7 +109,6 @@ class ManagerTest extends IntegrationTestCase
             array(false, 'a.'),
             array(false, 'a-'),
             array(false, 'a-ererer'),
-            array(false, 'a_ererer'),
             array(false, '..'),
             array(false, '/'),
         );

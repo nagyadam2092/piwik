@@ -8,6 +8,8 @@
 
 namespace Piwik\Plugins\Marketplace\tests\Framework\Mock;
 
+use Piwik\Filesystem;
+
 class Service extends \Piwik\Plugins\Marketplace\Api\Service {
 
     public $action;
@@ -57,6 +59,7 @@ class Service extends \Piwik\Plugins\Marketplace\Api\Service {
         }
 
         if ($destinationPath) {
+            Filesystem::mkdir(@dirname($destinationPath));
             file_put_contents($destinationPath, $url);
             return true;
         }
