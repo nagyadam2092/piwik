@@ -24,28 +24,28 @@ describe("Marketplace", function () {
         page.click('.panel-title [data-pluginname="' + pluginName + '"]');
     }
 
-    function captureWithNotification(done, screenshotName, test)
-    {
-        capture(done, screenshotName, test, ',#notificationContainer');
-    }
-
-    function captureWithDialog(done, screenshotName, test)
-    {
-        capture(done, screenshotName, test, ',.ui-dialog:visible');
-    }
-
     function captureSelector(done, screenshotName, test, selector)
     {
         expect.screenshot(screenshotName).to.be.captureSelector(selector, test, done);
     }
 
-    function capture(done, screenshotName, test, selector)
+    function captureMarketplace(done, screenshotName, test, selector)
     {
         if (!selector) {
             selector = '';
         }
 
         captureSelector(done, screenshotName, test, '.marketplace' + selector);
+    }
+
+    function captureWithNotification(done, screenshotName, test)
+    {
+        captureMarketplace(done, screenshotName, test, ',#notificationContainer');
+    }
+
+    function captureWithDialog(done, screenshotName, test)
+    {
+        captureMarketplace(done, screenshotName, test, ',.ui-dialog:visible');
     }
 
     function setEnvironment(mode, consumer)
@@ -63,6 +63,8 @@ describe("Marketplace", function () {
             testEnvironment.overrideConfig('General', 'multi_server_environment', '0')
         }
 
+        delete testEnvironment.showExpiredLicenseIfModule;
+
         testEnvironment.consumer = consumer;
         testEnvironment.mockMarketplaceApiService = 1;
         testEnvironment.save();
@@ -70,30 +72,45 @@ describe("Marketplace", function () {
 
     it('should show a message if license is expired and client is trying to access a paid plugin page', function (done) {
         setEnvironment('superuser', expiredLicense);
+        testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
+        testEnvironment.save();
 
         captureSelector(done, 'expired_license_standalone', function (page) {
-            testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
-            testEnvironment.save();
             page.load('?module=CustomDimensions&action=manage');
         }, 'body');
     });
 
-    it('embedded should show a message if license is expired and client is trying to access a paid plugin page', function (done) {
+    it('embedded should show a message if license is expired and client is trying to access a paid plugin page via XHR', function (done) {
         setEnvironment('superuser', expiredLicense);
+        testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
+        testEnvironment.save();
 
         captureSelector(done, 'expired_license_embedded', function (page) {
-            testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
-            testEnvironment.save();
             page.load('?module=CoreHome&action=index&idSite=1&period=day&date=yesterday#?module=CustomDimensions&action=manage&idSite=1&period=day&date=yesterday');
         }, '#content');
     });
 
     ['superuser', 'user', 'multiUserEnvironment'].forEach(function (mode) {
 
+        if (mode !== 'user') {
+            it('should show available updates in plugins page', function (done) {
+                setEnvironment(mode, noLicense);
+
+                captureSelector(done, mode + '_updates', function (page) {
+                    page.load('?module=CorePluginsAdmin&action=plugins&idSite=1&period=day&date=yesterday&activated=');
+                }, '.entityContainer:first');
+            });
+
+            it('should show number of available updates in plugins menu item', function (done) {
+                captureSelector(done, mode + '_updates_menu_item', function (page) {
+                }, '.navbar .item:contains(Plugins)');
+            });
+        }
+
         it(mode + ' for a user with valid license key should open paid plugins by default', function (done) {
             setEnvironment(mode, validLicense);
 
-            capture(done, mode + '_valid_license_paid_plugins', function (page) {
+            captureMarketplace(done, mode + '_valid_license_paid_plugins', function (page) {
                 page.load(urlBase);
             });
         });
@@ -101,7 +118,7 @@ describe("Marketplace", function () {
         it(mode + ' for a user with valid license key should be able to open free plugins and see only whitelisted plugins', function (done) {
             setEnvironment(mode, validLicense);
 
-            capture(done, mode + '_valid_license_free_plugins', function (page) {
+            captureMarketplace(done, mode + '_valid_license_free_plugins', function (page) {
                 page.load(freePluginsUrl);
             });
         });
@@ -109,7 +126,7 @@ describe("Marketplace", function () {
         it(mode + ' for a user without license key should open free plugins by default', function (done) {
             setEnvironment(mode, noLicense);
 
-            capture(done, mode + '_no_license_free_plugins', function (page) {
+            captureMarketplace(done, mode + '_no_license_free_plugins', function (page) {
                 page.load(urlBase);
             });
         });
@@ -117,7 +134,7 @@ describe("Marketplace", function () {
         it(mode + ' for a user without license key should be able to open paid plugins', function (done) {
             setEnvironment(mode, noLicense);
 
-            capture(done, mode + '_no_license_paid_plugins', function (page) {
+            captureMarketplace(done, mode + '_no_license_paid_plugins', function (page) {
                 page.load(paidPluginsUrl);
             });
         });
@@ -125,7 +142,7 @@ describe("Marketplace", function () {
         it(mode + ' for a user with expired license key should open paid plugins by default and show a warning that license is expired', function (done) {
             setEnvironment(mode, expiredLicense);
 
-            capture(done, mode + '_expired_license_paid_plugins', function (page) {
+            captureMarketplace(done, mode + '_expired_license_paid_plugins', function (page) {
                 page.load(urlBase);
             });
         });
@@ -133,7 +150,7 @@ describe("Marketplace", function () {
         it(mode + ' for a user with expired license key should be able to view free plugins, no restrictions in plugins anymore', function (done) {
             setEnvironment(mode, expiredLicense);
 
-            capture(done, mode + '_expired_license_free_plugins', function (page) {
+            captureMarketplace(done, mode + '_expired_license_free_plugins', function (page) {
                 page.load(freePluginsUrl);
             });
         });
@@ -203,11 +220,6 @@ describe("Marketplace", function () {
             page.click('#submit_license_key');
         });
     });
-
-
-    // TODO
-    // add test for updates (if possible)
-    // add test for expire license
 
 
 });

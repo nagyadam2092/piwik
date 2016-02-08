@@ -17,6 +17,8 @@ use Piwik\Plugin;
 use Piwik\Plugins\Marketplace\Api\Service;
 use Piwik\SettingsServer;
 use Piwik\Version;
+use Exception;
+use Psr\Log\LoggerInterface;
 
 /**
  *
@@ -41,10 +43,16 @@ class Client
      */
     private $pluginManager;
 
-    public function __construct(Service $service, Cache\Lazy $cache)
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(Service $service, Cache\Lazy $cache, LoggerInterface $logger)
     {
         $this->service = $service;
         $this->cache = $cache;
+        $this->logger = $logger;
         $this->pluginManager = Plugin\Manager::getInstance();
     }
 
@@ -149,12 +157,18 @@ class Client
                 continue;
             }
 
-            $plugin = $this->getPluginInfo($pluginHavingUpdate['name']);
+            try {
+                $plugin = $this->getPluginInfo($pluginHavingUpdate['name']);
+            } catch (Exception $e) {
+                $this->logger->error($e->getMessage());
+                $plugin = null;
+            }
 
             if (!empty($plugin)) {
                 $plugin['repositoryChangelogUrl'] = $pluginHavingUpdate['repositoryChangelogUrl'];
                 $pluginDetails[] = $plugin;
             }
+
         }
 
         return $pluginDetails;

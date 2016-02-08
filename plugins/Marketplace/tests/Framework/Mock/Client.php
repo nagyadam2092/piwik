@@ -10,11 +10,12 @@ namespace Piwik\Plugins\Marketplace\tests\Framework\Mock;
 
 use Piwik\Cache\Backend\NullCache;
 use Piwik\Cache\Lazy;
+use Psr\Log\NullLogger;
 
 class Client {
 
     public static function build($service)
     {
-        return new \Piwik\Plugins\Marketplace\Api\Client($service, new Lazy(new NullCache()));
+        return new \Piwik\Plugins\Marketplace\Api\Client($service, new Lazy(new NullCache()), new NullLogger());
     }
 }

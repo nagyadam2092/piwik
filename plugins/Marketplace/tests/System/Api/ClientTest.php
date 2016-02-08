@@ -16,6 +16,7 @@ use Piwik\Plugins\Marketplace\Input\PurchaseType;
 use Piwik\Tests\Framework\TestCase\SystemTestCase;
 use Piwik\Version;
 use Piwik\Plugins\Marketplace\tests\Framework\Mock\Service as TestService;
+use Psr\Log\NullLogger;
 
 /**
  * @group Plugins
@@ -219,7 +220,7 @@ class ClientTest extends SystemTestCase
             $service = new Service($this->domain);
         }
 
-        return new Client($service, $this->getCache());
+        return new Client($service, $this->getCache(), new NullLogger());
     }
 
     private function getCache()

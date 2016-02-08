@@ -113,8 +113,8 @@
                                 <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'Marketplace_CannotUpdate'|translate }}
                                 </button>
-                                (<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
-                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})
+                                <span style="white-space:nowrap">(<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
+                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})</span>
                             {% elseif plugin.isInstalled %}
                                 <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'General_Installed'|translate }}
@@ -124,8 +124,8 @@
                                 <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'Marketplace_CannotInstall'|translate }}
                                 </button>
-                                (<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
-                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})
+                                <span style="white-space:nowrap">(<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
+                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})</span>
                             {% endif %}
 
                         {% elseif plugin.isInstalled %}
