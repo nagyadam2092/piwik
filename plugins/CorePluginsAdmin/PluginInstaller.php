@@ -46,7 +46,7 @@ class PluginInstaller
             $this->makeSurePluginNameIsValid();
 
             $tmpPluginZip = $this->downloadPluginFromMarketplace();
-            $tmpPluginFolder = dirname($tmpPluginZip) . '/';
+            $tmpPluginFolder = dirname($tmpPluginZip) . '/' . basename($tmpPluginZip, '.zip') .  '/';
             $this->extractPluginFiles($tmpPluginZip, $tmpPluginFolder);
             $this->makeSurePluginJsonExists($tmpPluginFolder);
             $metadata = $this->getPluginMetadataIfValid($tmpPluginFolder);

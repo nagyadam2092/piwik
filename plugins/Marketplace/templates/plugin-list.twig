@@ -110,16 +110,22 @@
                             {%- endmacro %}
 
                             {% if plugin.canBeUpdated and 0 == plugin.missingRequirements|length %}
-                                <a class="btn btn-link btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'CorePluginsAdmin_CannotUpdate'|translate }}</a>
-                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }}
+                                <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
+                                    {{ 'Marketplace_CannotUpdate'|translate }}
+                                </button>
+                                (<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
+                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})
                             {% elseif plugin.isInstalled %}
-                                <button class="btn btn-noop" style="padding-right: 0px;">
+                                <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'General_Installed'|translate }}
                                 </button>
                                 {{ _self.downloadButton(false, plugin, isMultiServerEnvironment, true)|raw }}
                             {% else %}
-                                <a class="btn btn-link btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'CorePluginsAdmin_CannotInstall'|translate }}</a>
-                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }}
+                                <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
+                                    {{ 'Marketplace_CannotInstall'|translate }}
+                                </button>
+                                (<a class="btn btn-link plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">{{ 'General_Help'|translate }}</a>
+                                {{ _self.downloadButton(true, plugin, isMultiServerEnvironment)|raw }})
                             {% endif %}
 
                         {% elseif plugin.isInstalled %}

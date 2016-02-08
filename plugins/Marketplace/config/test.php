@@ -13,7 +13,7 @@ return array(
         $updater = $c->get('Piwik\Plugins\CoreUpdater\Updater');
 
         if ($updater->isUpdatingOverHttps()) {
-            $domain = str_replace('http://', 'https://', $this->domain);
+            $domain = str_replace('http://', 'https://', $domain);
         }
 
         return $domain;

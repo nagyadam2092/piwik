@@ -23,7 +23,7 @@ class Updates_2_16_1_b1 extends PiwikUpdates
 
     public function doUpdate(Updater $updater)
     {
-        $isMarketplaceEnabled = Config::getInstance()->General[$this->marketplacEnabledConfigSetting];
+        $isMarketplaceEnabled = $this->getConfig()->General[$this->marketplacEnabledConfigSetting];
 
         $this->removeOldMarketplaceEnabledConfig();
 
@@ -31,14 +31,19 @@ class Updates_2_16_1_b1 extends PiwikUpdates
         $pluginName = 'Marketplace';
 
         if ($isMarketplaceEnabled &&
-            !$pluginManager->getInstance()->isPluginActivated($pluginName)) {
+            !$pluginManager->isPluginActivated($pluginName)) {
             $pluginManager->activatePlugin($pluginName);
         }
     }
 
+    private function getConfig()
+    {
+        return Config::getInstance();
+    }
+
     private function removeOldMarketplaceEnabledConfig()
     {
-        $config = Config::getInstance();
+        $config  = $this->getConfig();
         $general = $config->General;
 
         if (array_key_exists($this->marketplacEnabledConfigSetting, $general)) {

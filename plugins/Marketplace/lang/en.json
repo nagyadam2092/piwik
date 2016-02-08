@@ -5,6 +5,8 @@
     "BeCarefulUsingPlugins": "Plugins that are not authored by Piwik team must be used with care: we did not review them.",
     "BeCarefulUsingThemes": "Themes that are not authored by Piwik team must be used with care: we did not review them.",
     "ByXDevelopers": "by %s developers",
+    "CannotInstall": "Cannot install",
+    "CannotUpdate": "Cannot update",
     "Developer": "Developer",
     "DevelopersLearnHowToDevelopPlugins": "Developers: Learn how you can extend and customize Piwik by %1$sdeveloping plugins or themes%2$s.",
     "Marketplace": "Marketplace",

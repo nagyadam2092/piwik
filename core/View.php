@@ -86,8 +86,8 @@ if (!defined('PIWIK_USER_PATH')) {
  *                  which is outputted in the template, eg, `{{ postEvent('MyPlugin.event') }}`
  * - **isPluginLoaded**: Returns true if the supplied plugin is loaded, false if otherwise.
  *                       `{% if isPluginLoaded('Goals') %}...{% endif %}`
- * - **arePiwikProAdsEnabled**: Returns true if it is ok to show some Piwik PRO advertising in the UI (from Piwik 2.16.0)
- * - **isMultiServerEnvironment**: Returns true if Piwik is used on more than one server (from 2.16.1)
+ * - **arePiwikProAdsEnabled**: Returns true if it is ok to show some Piwik PRO advertising in the UI (since Piwik 2.16.0)
+ * - **isMultiServerEnvironment**: Returns true if Piwik is used on more than one server (since Piwik 2.16.1)
  *
  * ### Examples
  *

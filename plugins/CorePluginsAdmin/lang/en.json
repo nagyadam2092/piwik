@@ -11,8 +11,6 @@
         "AlwaysActivatedPluginsList": "The following plugins are always activated and cannot be disabled: %s",
         "AuthorHomepage": "Author Homepage",
         "BackToExtendPiwik": "Back to Marketplace",
-        "CannotInstall": "Cannot install (help)",
-        "CannotUpdate": "Cannot update (help)",
         "Changelog": "Changelog",
         "ChangeSettingsPossible": "You can change %1$ssettings%2$s for this plugin.",
         "CorePluginTooltip": "Core plugins have no version since they are distributed with Piwik.",
