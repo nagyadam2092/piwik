@@ -14,6 +14,7 @@ use Exception;
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
 use Piwik\Date;
+use Piwik\Filesystem;
 use Piwik\Http;
 use Piwik\Log;
 use Piwik\Option;
@@ -264,6 +265,7 @@ class GeoIPAutoUpdater extends Task
             // delete the existing GeoIP database (if any) and rename the downloaded file
             $oldDbFile = GeoIp::getPathForGeoIpDatabase($dbFilename);
             if (file_exists($oldDbFile)) {
+                self::createBackupCopy($oldDbFile);
                 unlink($oldDbFile);
             }
 
@@ -283,6 +285,36 @@ class GeoIPAutoUpdater extends Task
 
             throw $ex;
         }
+    }
+
+    protected static function createBackupCopy($file)
+    {
+        $backupPath = self::getBackupCopyFileName($file);
+
+        if (file_exists($file)) {
+            Filesystem::copy($file, $backupPath);
+        }
+    }
+
+    protected static function restoreBackupCopy($file)
+    {
+        $backupPath = self::getBackupCopyFileName($file);
+
+        if (file_exists($backupPath)) {
+            Filesystem::copy($backupPath, $file);
+            Filesystem::remove($backupPath);
+        }
+    }
+
+    protected static function removeBackupCopy($file)
+    {
+        $backupPath = self::getBackupCopyFileName($file);
+        Filesystem::deleteFileIfExists($backupPath);
+    }
+
+    protected static function getBackupCopyFileName($file)
+    {
+        return $file . '.backup';
     }
 
     /**
@@ -562,6 +594,7 @@ class GeoIPAutoUpdater extends Task
                     }
 
                     rename($oldPath, $newPath);
+                    self::restoreBackupCopy($oldPath);
                 }
             }
         }

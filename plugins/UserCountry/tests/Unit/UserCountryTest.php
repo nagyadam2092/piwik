@@ -15,6 +15,7 @@ use Piwik\Plugins\UserCountry\LocationProvider\GeoIp;
 use Piwik\Plugins\UserCountry;
 use Piwik\Plugins\UserCountry\LocationProvider;
 use Exception;
+use Piwik\Tests\Framework\Fixture;
 
 require_once PIWIK_INCLUDE_PATH . '/plugins/UserCountry/UserCountry.php';
 require_once PIWIK_INCLUDE_PATH . '/plugins/UserCountry/functions.php';
@@ -125,6 +126,49 @@ class UserCountryTest extends \PHPUnit_Framework_TestCase
                      array("http://localhost/tests/resources/geoip.dat"));
     }
 
+    /**
+     * @group Plugins
+     */
+    public function testBackupFallback()
+    {
+        GeoIp::$geoIPDatabaseDir = 'tests/lib/geoip-files';
+        LocationProvider::$providers = null;
+
+        $geoIpDir = PIWIK_INCLUDE_PATH . '/tests/lib/geoip-files';
+
+        $updater = new Piwik_UserCountry_GeoIPAutoUpdater_publictest();
+
+        // successful download, to ensure a valid file is present
+        if (!file_exists($geoIpDir . '/GeoIPCity.dat')) {
+            Fixture::downloadGeoIpDbs();
+        }
+
+        $this->assertFileExists($geoIpDir . '/GeoIPCity.dat');
+
+        $validFileSize = filesize($geoIpDir . '/GeoIPCity.dat');
+
+        $updater->downloadFile('loc', Fixture::getRootUrl() . '/tests/lib/geoip-files/GeoIPCity.dat.gz');
+
+        # check old file was backuped
+        $this->assertFileExists($geoIpDir . '/GeoIPCity.dat.backup');
+        $this->assertEquals($validFileSize, filesize($geoIpDir . '/GeoIPCity.dat.backup'));
+
+        # corrupt file after successful check after download
+        $fd = fopen($geoIpDir . '/GeoIPCity.dat', 'w');
+        fclose($fd);
+
+        # manually perform checks after update
+        $updater->performRedundantDbChecks();
+
+        # check for restored backup
+        $this->assertFileExists($geoIpDir . '/GeoIPCity.dat');
+        $this->assertEquals($validFileSize, filesize($geoIpDir . '/GeoIPCity.dat'));
+        # backup should have been removed/renamed
+        $this->assertFileNotExists($geoIpDir . '/GeoIPCity.dat.backup');
+        # corrupted file should have been renamed to *.broken
+        $this->assertFileExists($geoIpDir . '/GeoIPCity.dat.broken');
+    }
+
     public function setUp()
     {
         // empty
@@ -133,7 +177,7 @@ class UserCountryTest extends \PHPUnit_Framework_TestCase
     public function tearDown()
     {
         $geoIpDirPath = PIWIK_INCLUDE_PATH . '/tests/lib/geoip-files';
-        $filesToRemove = array('GeoIPISP.dat.broken', 'GeoIPOrg.dat.broken', 'GeoIPISP.dat', 'GeoIPOrg.dat');
+        $filesToRemove = array('GeoIPISP.dat.broken', 'GeoIPOrg.dat.broken', 'GeoIPISP.dat', 'GeoIPOrg.dat', 'GeoIPCity.dat.broken');
 
         foreach ($filesToRemove as $name) {
             $path = $geoIpDirPath . '/' . $name;
@@ -158,13 +202,13 @@ class UserCountryTest extends \PHPUnit_Framework_TestCase
     {
         $geoIpDir = PIWIK_INCLUDE_PATH . '/tests/lib/geoip-files';
 
-        $this->assertFalse(file_exists($geoIpDir . '/GeoIPCity.dat.broken'));
+        $this->assertFileNotExists($geoIpDir . '/GeoIPCity.dat.broken');
 
-        $this->assertFalse(file_exists($geoIpDir . '/GeoIPISP.dat'));
-        $this->assertTrue(file_exists($geoIpDir . '/GeoIPISP.dat.broken'));
+        $this->assertFileNotExists($geoIpDir . '/GeoIPISP.dat');
+        $this->assertFileExists($geoIpDir . '/GeoIPISP.dat.broken');
 
-        $this->assertFalse(file_exists($geoIpDir . '/GeoIPOrg.dat'));
-        $this->assertTrue(file_exists($geoIpDir . '/GeoIPOrg.dat.broken'));
+        $this->assertFileNotExists($geoIpDir . '/GeoIPOrg.dat');
+        $this->assertFileExists($geoIpDir . '/GeoIPOrg.dat.broken');
     }
 }
 
