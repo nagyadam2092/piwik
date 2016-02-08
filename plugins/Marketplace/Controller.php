@@ -87,6 +87,15 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $view->deactivateNonce = Nonce::getNonce(PluginsController::DEACTIVATE_NONCE);
         $view->isTrackerPlugin = false;
 
+        $isEmbeddedViaXhr = false;
+        if (Common::getRequestVar('widget', 0, 'int')) {
+            $isEmbeddedViaXhr = true;
+        } elseif (!empty($_SERVER['REQUEST_METHOD']) && 'post' === strtolower($_SERVER['REQUEST_METHOD'])) {
+            $isEmbeddedViaXhr = true;
+        }
+
+        $view->isEmbeddedViaXhr = $isEmbeddedViaXhr;
+
         $pluginManager = $this->getPluginManager();
 
         try {

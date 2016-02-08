@@ -37,7 +37,7 @@ class Marketplace extends \Piwik\Plugin
 
         if ($pluginManager->isPluginBundledWithCore($module)) {
             // make sure to never accidentally hide a core plugin
-            return false;
+            return;
         }
 
         $expiredPlugins = StaticContainer::get('Piwik\Plugins\Marketplace\Plugins\Expired');

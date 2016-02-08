@@ -34,12 +34,18 @@ describe("Marketplace", function () {
         capture(done, screenshotName, test, ',.ui-dialog:visible');
     }
 
+    function captureSelector(done, screenshotName, test, selector)
+    {
+        expect.screenshot(screenshotName).to.be.captureSelector(selector, test, done);
+    }
+
     function capture(done, screenshotName, test, selector)
     {
         if (!selector) {
             selector = '';
         }
-        expect.screenshot(screenshotName).to.be.captureSelector('.marketplace' + selector, test, done);
+
+        captureSelector(done, screenshotName, test, '.marketplace' + selector);
     }
 
     function setEnvironment(mode, consumer)
@@ -61,6 +67,26 @@ describe("Marketplace", function () {
         testEnvironment.mockMarketplaceApiService = 1;
         testEnvironment.save();
     }
+
+    it('should show a message if license is expired and client is trying to access a paid plugin page', function (done) {
+        setEnvironment('superuser', expiredLicense);
+
+        captureSelector(done, 'expired_license_standalone', function (page) {
+            testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
+            testEnvironment.save();
+            page.load('?module=CustomDimensions&action=manage');
+        }, 'body');
+    });
+
+    it('embedded should show a message if license is expired and client is trying to access a paid plugin page', function (done) {
+        setEnvironment('superuser', expiredLicense);
+
+        captureSelector(done, 'expired_license_embedded', function (page) {
+            testEnvironment.showExpiredLicenseIfModule = 'CustomDimensions';
+            testEnvironment.save();
+            page.load('?module=CoreHome&action=index&idSite=1&period=day&date=yesterday#?module=CustomDimensions&action=manage&idSite=1&period=day&date=yesterday');
+        }, '#content');
+    });
 
     ['superuser', 'user', 'multiUserEnvironment'].forEach(function (mode) {
 
@@ -183,19 +209,5 @@ describe("Marketplace", function () {
     // add test for updates (if possible)
     // add test for expire license
 
-    it('should show a success message when valid license key entered', function (done) {
-        setEnvironment(mode, noLicense);
-
-        captureWithNotification(done, mode + '_valid_license_key_entered', function (page) {
-            testEnvironment.redirectToMarketplaceExpiredLicense = 1;
-            testEnvironment.save();
-            page.load('module=SecurityInfo');
-            page.sendKeys('#license_key', 'valid');
-            page.callMethod(function () {
-                setEnvironment(mode, validLicense);
-            });
-            page.click('#submit_license_key');
-        });
-    });
 
 });

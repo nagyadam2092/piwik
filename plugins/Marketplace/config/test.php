@@ -6,6 +6,7 @@ use Piwik\Plugins\Marketplace\tests\Framework\Mock\Consumer as MockConsumer;
 use Piwik\Plugins\Marketplace\LicenseKey;
 use Piwik\Plugins\Marketplace\tests\Framework\Mock\Service as MockService;
 use Piwik\Plugins\Marketplace\Input\PurchaseType;
+use Piwik\Container\StaticContainer;
 
 return array(
     'MarketplaceEndpoint' => function (ContainerInterface $c) {
@@ -75,7 +76,9 @@ return array(
     'observers.global' => DI\add(array(
 
         array('Request.getRenamedModuleAndAction', function (&$module, &$action) {
-            if (\Piwik\Container\StaticContainer::get('test.vars.redirectToMarketplaceExpiredLicense')) {
+            $redirectIfModule = StaticContainer::get('test.vars.showExpiredLicenseIfModule');
+
+            if (!empty($redirectIfModule) && $module === $redirectIfModule) {
                 $module = 'Marketplace';
                 $action = 'expiredLicense';
             }
