@@ -28,6 +28,8 @@
                 {{ defaultLicenseKeyFields|raw }}
                 <input id="remove_license_key" class="btn" type="button" value="{{ 'Marketplace_RemoveLicenseKey'|translate|e('html_attr') }}">
 
+                <span id="licenseKeyLoading"><img src="plugins/Morpheus/images/loading-blue.gif" alt="Loading data..."></span>
+
             {% else %}
                 {{ 'Marketplace_NotAllowedToBrowseMarketplacePlugins'|translate }}
             {% endif %}
@@ -46,6 +48,8 @@
                 <br /><br />
 
                 {{ defaultLicenseKeyFields|raw }}
+
+                <span id="licenseKeyLoading"><img src="plugins/Morpheus/images/loading-blue.gif" alt="Loading data..."></span>
 
             {% else %}
                 {{ 'Marketplace_PaidPluginsNoLicenseKeyIntroNoSuperUserAccess'|translate('<a rel="noreferrer" target="_blank" href="' ~ piwikProLink ~ '">','</a>', '<a  rel="noreferrer"  target="_blank" href="' ~ upgradePiwikProLink ~ '">','</a>')|raw }}

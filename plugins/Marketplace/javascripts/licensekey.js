@@ -14,6 +14,7 @@ $(document).ready(function () {
     function updateLicenseKey(action, licenseKey, onSuccessMessage)
     {
         var ajaxRequest = new ajaxHelper();
+        ajaxRequest.setLoadingElement('#licenseKeyLoading');
         ajaxRequest.addParams({
             module: 'API',
             method: 'Marketplace.' + action,
