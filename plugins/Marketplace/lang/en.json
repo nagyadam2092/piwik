@@ -12,7 +12,6 @@
     "Marketplace": "Marketplace",
     "PaidPlugins": "Paid Plugins",
     "FreePlugins": "Free Plugins",
-    "FreeThemes": "Free Themes",
     "FeaturedPlugin": "Featured plugin",
     "InstallingNewPluginViaMarketplaceOrUpload": "You may automatically install %1$s from the Marketplace or %2$supload a %3$s%4$s in .zip format.",
     "LastCommitTime": "(last commit %s)",

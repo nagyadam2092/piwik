@@ -67,7 +67,7 @@
                         </ul>
 
                         <div id="tabs-description">
-                            {% if isSuperUser %}
+                            {% if isSuperUser and plugin.isDownloadable %}
                                 {{ marketplaceMacro.missingRequirementsPleaseUpdateNotice(plugin) }}
 
                                 {% if isMultiServerEnvironment %}

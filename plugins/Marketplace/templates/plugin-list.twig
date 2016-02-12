@@ -109,6 +109,12 @@
                                 {%- endif -%}
                             {%- endmacro %}
 
+                            {% macro moreDetailsLink(plugin) %}
+                                <a class="btn btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">
+                                    {{ 'General_MoreDetails'|translate }}
+                                </a>
+                            {% endmacro %}
+
                             {% if plugin.canBeUpdated and 0 == plugin.missingRequirements|length %}
                                 <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'Marketplace_CannotUpdate'|translate }}
@@ -119,6 +125,8 @@
                                     {{ 'General_Installed'|translate }}
                                 </button>
                                 {{ _self.downloadButton(false, plugin, isAutoUpdatePossible, true)|raw }}
+                            {% elseif not plugin.isDownloadable %}
+                                {{ _self.moreDetailsLink(plugin)|raw }}
                             {% else %}
                                 <button class="btn btn-noop" style="padding-right: 0px;padding-left: 0px;">
                                     {{ 'Marketplace_CannotInstall'|translate }}
@@ -136,9 +144,7 @@
                             {% endif %}
 
                         {% elseif plugin.isPaid and not plugin.isDownloadable %}
-                            <a class="btn btn-block plugin-details" href="#" data-pluginName="{{ plugin.name }}" title="{{ 'General_MoreDetails'|translate }}">
-                                {{ 'General_MoreDetails'|translate }}
-                            </a>
+                            {{ _self.moreDetailsLink(plugin)|raw }})
                         {% else %}
                             <a href="{{ linkTo({'action': 'installPlugin','module': 'CorePluginsAdmin', 'pluginName': plugin.name, 'nonce': installNonce}) }}"
                                class="btn btn-block">
