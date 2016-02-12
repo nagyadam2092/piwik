@@ -12,15 +12,14 @@
     <p class="marketplace-paid-intro">
         {% if isAuthenticatedCustomer %}
             {% if isSuperUser %}
+                {% if consumer.isExpiredSoon %}
+                    <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
+                {% endif %}
 
                 {% if consumer.expireDateLong is defined and consumer.expireDateLong %}
                     {{ 'Marketplace_PaidPluginsWithLicenseKeyAndExpireDayIntro'|translate(distributorLink, consumer.expireDateLong, distributorLink)|raw }}
                 {% else %}
                     {{ 'Marketplace_PaidPluginsWithLicenseKeyAndNoExpireDayIntro'|translate(distributorLink)|raw }}
-                {% endif %}
-
-                {% if consumer.isExpiredSoon %}
-                    <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyExpiresSoon'|translate(distributorLink)|raw }}</div>
                 {% endif %}
 
                 <br /><br />
@@ -35,7 +34,7 @@
             {% endif %}
 
         {% else %}
-            {% if isSuperUser and consumer is not empty and consumer.isExpired %}
+            {% if consumer is not empty and consumer.isExpired %}
                 <div class="alert alert-warning">{{ 'Marketplace_LicenseKeyIsExpired'|translate(distributorLink)|raw }}</div>
             {% endif %}
 
