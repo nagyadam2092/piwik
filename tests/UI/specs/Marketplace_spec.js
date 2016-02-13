@@ -58,10 +58,12 @@ describe("Marketplace", function () {
         }
 
         if (mode === 'multiUserEnvironment') {
-            testEnvironment.overrideConfig('General', 'multi_server_environment', '1')
+            testEnvironment.overrideConfig('General', 'multi_server_environment', '1');
         } else {
-            testEnvironment.overrideConfig('General', 'multi_server_environment', '0')
+            testEnvironment.overrideConfig('General', 'multi_server_environment', '0');
         }
+
+        testEnvironment.overrideConfig('General', 'enable_plugins_admin', '1');
 
         delete testEnvironment.showExpiredLicenseIfModule;
 
@@ -218,6 +220,26 @@ describe("Marketplace", function () {
                 setEnvironment(mode, validLicense);
             });
             page.click('#submit_license_key');
+        });
+    });
+
+    it('should hide activate / deactivate buttons if plugins admin is disabled', function (done) {
+        setEnvironment(mode, noLicense);
+        testEnvironment.overrideConfig('General', 'enable_plugins_admin', '0');
+        testEnvironment.save();
+
+        captureMarketplace(done, mode + '_enable_plugins_admin', function (page) {
+            page.load(freePluginsUrl);
+        });
+    });
+
+    it('should hide activate / deactivate buttons if plugins admin is disabled when also multi server environment is enabled', function (done) {
+        setEnvironment('multiUserEnvironment', noLicense);
+        testEnvironment.overrideConfig('General', 'enable_plugins_admin', '0');
+        testEnvironment.save();
+
+        captureMarketplace(done, mode + '_enable_plugins_admin_with_multiserver_enabled', function (page) {
+            page.load(freePluginsUrl);
         });
     });
 

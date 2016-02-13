@@ -297,7 +297,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $pluginManager = $this->getPluginManager();
         $dependency = new Plugin\Dependency();
 
-        for ($i = 0; $i <= 5; $i++) {
+        for ($i = 0; $i <= 10; $i++) {
             foreach ($paidPlugins as $index => $paidPlugin) {
                 $pluginName = $paidPlugin['name'];
 
