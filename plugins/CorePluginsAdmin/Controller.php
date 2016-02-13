@@ -444,6 +444,10 @@ class Controller extends Plugin\ControllerAdmin
 
         $pluginName = Common::getRequestVar('pluginName', null, 'string');
 
+        if (!$this->pluginManager->isValidPluginName($pluginName)) {
+            throw new Exception('Invalid plugin name');
+        }
+
         return $pluginName;
     }
 
