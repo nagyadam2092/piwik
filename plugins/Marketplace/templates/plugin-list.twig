@@ -144,7 +144,7 @@
                             {% endif %}
 
                         {% elseif plugin.isPaid and not plugin.isDownloadable %}
-                            {{ _self.moreDetailsLink(plugin)|raw }})
+                            {{ _self.moreDetailsLink(plugin)|raw }}
                         {% else %}
                             <a href="{{ linkTo({'action': 'installPlugin','module': 'CorePluginsAdmin', 'pluginName': plugin.name, 'nonce': installNonce}) }}"
                                class="btn btn-block">
